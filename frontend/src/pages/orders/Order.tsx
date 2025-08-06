@@ -1,4 +1,3 @@
-import React from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import BasicTableOne from "../../components/tables/BasicTables/BasicTableOne";
@@ -7,8 +6,19 @@ import { Modal } from "../../components/ui/modal";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Button from "../../components/ui/button/Button";
+import Select from "../../components/form/Select";
+import { useState } from "react";
 
 const Order = () => {
+  const [selectedOption, setSelectedOption] = useState<string>("");
+  const handleSelectChange = (value: string) => {
+    setSelectedOption(value);
+  };
+  const options = [
+    { value: "normal", label: "Normal" },
+    { value: "reverse", label: "Reverse" },
+    { value: "replacement", label: "Replacement" },
+  ];
   const { isOpen, openModal, closeModal } = useModal();
   return (
     <>
@@ -55,47 +65,175 @@ const Order = () => {
             </h4>
           </div>
           <form className="flex flex-col">
-            <div className="custom-scrollbar h-[40px] overflow-y-auto px-2 pb-3">
-              {/* <div className="mt-7">
+            <div className="custom-scrollbar h-[500px] overflow-y-auto px-2 pb-3">
+              {/* Order Information */}
+              <div className="mt-7">
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Personal Information
+                  Order Information
+                </h5>
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Order Type <span className="text-error-500">*</span>
+                    </Label>
+                    <Select
+                      options={options}
+                      defaultValue=""
+                      placeholder="Choose Order Type"
+                      onChange={handleSelectChange}
+                    />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Order Reference Number{" "}
+                      <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="number" placeholder="Order red Number" />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Order Amount <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="number" value="0" />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Order Date <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="date" placeholder="Select Order Date" />
+                  </div>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Airway Bill Copies{" "}
+                      <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="number" value="1" />
+                  </div>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Items <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="number" value="1" />
+                  </div>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Booking Weight <span className="text-gray-400">(kg)</span>
+                    </Label>
+                    <Input type="number" value="0" />
+                  </div>
+                </div>
+              </div>
+              {/* Customer Information */}
+              <div className="mt-7">
+                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                  Customer Information
                 </h5>
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>First Name</Label>
-                    <Input type="text" value="Musharof" />
+                    <Label>
+                      Customer Name <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="text" placeholder="Enter Customer Name" />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Last Name</Label>
-                    <Input type="text" value="Chowdhury" />
+                    <Label>
+                      Contact Number <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="number" placeholder="03xxxxxxxxx" />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
-                    <Input type="text" value="randomuser@pimjo.com" />
+                    <Label>
+                      Delivery City <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="text" value="Lahore" disabled />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Phone</Label>
-                    <Input type="text" value="+09 363 398 46" />
-                  </div>
-
-                  <div className="col-span-2">
-                    <Label>Bio</Label>
-                    <Input type="text" value="Team Manager" />
+                    <Label>
+                      Delivery Address <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="text" placeholder="Customer Address" />
                   </div>
                 </div>
-              </div> */}
+              </div>
+              {/* Shipper Information */}
+              <div className="mt-7">
+                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                  Shipper Information
+                </h5>
+
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Pickup City <span className="text-error-500">*</span>
+                    </Label>
+                    <Select
+                      options={options}
+                      defaultValue=""
+                      placeholder="Choose Pickup City"
+                      onChange={handleSelectChange}
+                    />
+                  </div>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Pickup Address <span className="text-error-500">*</span>
+                    </Label>
+                    <Select
+                      options={options}
+                      defaultValue=""
+                      placeholder="Choose Pickup Address"
+                      onChange={handleSelectChange}
+                    />
+                  </div>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>Return City</Label>
+                    <Select
+                      options={options}
+                      defaultValue=""
+                      placeholder="Choose Return City"
+                      onChange={handleSelectChange}
+                    />
+                  </div>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>Return Address</Label>
+                    <Select
+                      options={options}
+                      defaultValue=""
+                      placeholder="Choose Return Address"
+                      onChange={handleSelectChange}
+                    />
+                  </div>
+                </div>
+              </div>
+              {/* Additional Information */}
+              <div className="mt-7">
+                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                  Additional Information
+                </h5>
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                  <div className="col-span-2">
+                    <Label>Order Detail</Label>
+                    <Input type="text" />
+                  </div>
+                  <div className="col-span-2">
+                    <Label>Notes</Label>
+                    <Input type="text" />
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm">
-                Save
-              </Button>
+              <Button size="sm">Save</Button>
+              <Button size="sm" variant="ghost">Save & Print</Button>
             </div>
           </form>
         </div>

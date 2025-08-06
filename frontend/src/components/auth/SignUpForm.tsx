@@ -49,6 +49,18 @@ export default function SignUpForm() {
                     />
                   </div>
                 </div>
+                {/* <!-- Phone Number --> */}
+                <div>
+                  <Label>
+                    Mobile Number<span className="text-error-500">*</span>
+                  </Label>
+                  <Input
+                    type="number"
+                    id="phone"
+                    name="phone"
+                    placeholder="Enter your mobile number"
+                  />
+                </div>
                 {/* <!-- Email --> */}
                 <div>
                   <Label>
