@@ -25,11 +25,7 @@ export default function UserMetaCard() {
               </h4>
               <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Team Manager
-                </p>
-                <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Arizona, United States
+                  Shipper
                 </p>
               </div>
             </div>
@@ -69,6 +65,7 @@ export default function UserMetaCard() {
           </div>
           <form className="flex flex-col">
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+              {/* Personal Information */}
               <div className="mt-7">
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
                   Personal Information
@@ -76,28 +73,70 @@ export default function UserMetaCard() {
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>First Name</Label>
+                    <Label>
+                      First Name <span className="text-error-500">*</span>
+                    </Label>
                     <Input type="text" value="Musharof" />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Last Name</Label>
+                    <Label>
+                      Last Name <span className="text-error-500">*</span>
+                    </Label>
                     <Input type="text" value="Chowdhury" />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
+                    <Label>
+                      Email Address <span className="text-error-500">*</span>
+                    </Label>
                     <Input type="text" value="randomuser@pimjo.com" />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Phone</Label>
+                    <Label>
+                      Phone <span className="text-error-500">*</span>
+                    </Label>
                     <Input type="text" value="+09 363 398 46" />
                   </div>
 
-                  <div className="col-span-2">
+                  <div className="col-span-2 lg:col-span-1">
                     <Label>Bio</Label>
-                    <Input type="text" value="Team Manager" />
+                    <Input type="text" value="Shipper" disabled />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>Shipper Number</Label>
+                    <Input type="text" value="00001" disabled />
+                  </div>
+                </div>
+              </div>
+              {/* Bank Information */}
+              <div className="mt-7">
+                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                  Bank Information
+                </h5>
+
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Bank Name <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="text" value="United Bank Limited" />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Account Number <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="text" value="10008329374898" />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Account Name <span className="text-error-500">*</span>
+                    </Label>
+                    <Input type="text" value="Musharof" />
                   </div>
                 </div>
               </div>

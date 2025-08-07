@@ -3,17 +3,12 @@ import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
-  // BoxCubeIcon,
   CalenderIcon,
   CheckLineIcon,
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
-  // ListIcon,
-  // PageIcon,
-  // PieChartIcon,
-  // PlugInIcon,
-  // TableIcon,
+  ListIcon,
   UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
@@ -36,7 +31,22 @@ const navItems: NavItem[] = [
   {
     icon: <CalenderIcon />,
     name: "Orders",
-    path: "/orders",
+    subItems: [
+      { name: "Manual Orders", path: "/orders", pro: false },
+      { name: "Bulk Orders", path: "/bulk-orders", pro: false },
+      { name: "Order Logs", path: "/order-logs", pro: false },
+      { name: "Airway Bills", path: "/airway-bills", pro: false },
+      { name: "Generate Loads Sheets", path: "/load-sheet", pro: false },
+      { name: "Generate Logs Sheets", path: "/log-sheet", pro: false },
+    ],
+  },
+  {
+    icon: <ListIcon />,
+    name: "Payments",
+    subItems: [
+      { name: "Cash Payment", path: "/cash-payment", pro: false },
+      { name: "Settlement Payment", path: "/settlement-payment", pro: false },
+    ],
   },
   {
     icon: <CheckLineIcon />,
