@@ -1,10 +1,11 @@
 import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
 import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
-import StatisticsChart from "../../components/ecommerce/StatisticsChart";
-import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
-// import RecentOrders from "../../components/ecommerce/RecentOrders";
-// import DemographicCard from "../../components/ecommerce/DemographicCard";
+// import StatisticsChart from "../../components/ecommerce/StatisticsChart";
+// import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
 import PageMeta from "../../components/common/PageMeta";
+// import DemographicCard from "../../components/ecommerce/DemographicCard";
+import RecentTransactions from "../../components/ecommerce/RecentTransactions";
+import TotalOrdersCount from "../../components/ecommerce/TotalOrdersCount";
 
 export default function Home() {
   return (
@@ -21,19 +22,19 @@ export default function Home() {
         </div>
 
         <div className="col-span-12 xl:col-span-5">
-          <MonthlyTarget />
+          <TotalOrdersCount />
         </div>
 
-        <div className="col-span-12">
+        {/* <div className="col-span-12">
           <StatisticsChart />
-        </div>
-
-        {/* <div className="col-span-12 xl:col-span-5">
-          <DemographicCard />
-        </div>
+        </div> */}
 
         <div className="col-span-12 xl:col-span-7">
-          <RecentOrders />
+          <RecentTransactions />
+
+        </div>
+
+        {/* <div className="col-span-12 xl:col-span-7">
         </div> */}
       </div>
     </>
