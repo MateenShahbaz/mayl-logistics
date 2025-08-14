@@ -32,20 +32,20 @@ const navItems: NavItem[] = [
     icon: <CalenderIcon />,
     name: "Orders",
     subItems: [
-      { name: "Manual Orders", path: "/orders", pro: false },
-      { name: "Bulk Orders", path: "/bulk-orders", pro: false },
-      { name: "Order Logs", path: "/order-logs", pro: false },
+      { name: "Create Orders", path: "/orders", pro: false },
+      { name: "Bulk Booking", path: "/bulk-booking", pro: false },
+      { name: "Order Log", path: "/order-log", pro: false },
       { name: "Airway Bills", path: "/airway-bills", pro: false },
-      { name: "Generate Loads Sheets", path: "/load-sheet", pro: false },
-      { name: "Generate Logs Sheets", path: "/log-sheet", pro: false },
+      { name: "Generate Load Sheet", path: "/load-sheet", pro: false },
+      { name: "Load Sheets Logs", path: "/log-sheet", pro: false },
     ],
   },
   {
     icon: <ListIcon />,
     name: "Payments",
     subItems: [
-      { name: "Cash Payment", path: "/cash-payment", pro: false },
-      { name: "Settlement Payment", path: "/settlement-payment", pro: false },
+      { name: "Cash Payment Reciept (CPR)", path: "/cash-payment", pro: false },
+      { name: "Transaction Log", path: "/settlement-payment", pro: false },
     ],
   },
   {

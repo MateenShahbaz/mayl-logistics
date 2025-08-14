@@ -38,12 +38,12 @@ const Order = () => {
                 Order
               </h3>
               <div>
-                <button
+                <Button
                   onClick={openModal}
-                  className="flex bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300"
+                  // className="flex bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300"
                 >
                   Create Order
-                </button>
+                </Button>
               </div>
             </div>
 

@@ -23,6 +23,8 @@ import CreateProfile from "./pages/AuthPages/CreateProfile";
 import Order from "./pages/orders/Order";
 import VerifiedShipper from "./pages/shippers/verifiedShipper/VerifiedShipper";
 import UnVerifiedShipper from "./pages/shippers/unVerifiedShipper/UnVerifiedShipper";
+import BulkBooking from "./pages/orders/BulkBooking";
+import OrderLog from "./pages/orders/OrderLog";
 
 export default function App() {
   return (
@@ -37,6 +39,8 @@ export default function App() {
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/orders" element={<Order />} />
+            <Route path="/bulk-booking" element={<BulkBooking />} />
+            <Route path="/order-log" element={<OrderLog />} />
             <Route path="/verified" element={<VerifiedShipper />} />
             <Route path="/unverified" element={<UnVerifiedShipper />} />
             <Route path="/calendar" element={<Calendar />} />
