@@ -8,16 +8,20 @@ const BulkBooking = () => {
     <>
       <div>
         <PageMeta
-          title="React.js Blank Dashboard | TailAdmin - Next.js Admin Dashboard Template"
+          title="Mayl Logistics"
           description="This is React.js Blank Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
         />
         <PageBreadcrumb pageTitle="Bulk Booking" />
-        <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-          <div className="flex flex-col lg:flex-row gap-3 lg:w-[50%]">
-            <FileInput />
-            <div className="flex gap-3">
-              <Button variant="outline">Clear</Button>
-              <Button variant="primary">Upload</Button>
+        <div className="space-y-6">
+          <div
+            className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]`}
+          >
+            <div className="flex flex-col lg:flex-row gap-3 lg:w-[50%] py-5 px-3">
+              <FileInput />
+              <div className="flex gap-3">
+                <Button variant="outline">Clear</Button>
+                <Button variant="primary">Upload</Button>
+              </div>
             </div>
           </div>
         </div>

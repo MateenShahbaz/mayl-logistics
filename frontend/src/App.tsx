@@ -25,6 +25,7 @@ import VerifiedShipper from "./pages/shippers/verifiedShipper/VerifiedShipper";
 import UnVerifiedShipper from "./pages/shippers/unVerifiedShipper/UnVerifiedShipper";
 import BulkBooking from "./pages/orders/BulkBooking";
 import OrderLog from "./pages/orders/OrderLog";
+import AirwayBills from "./pages/orders/AirwayBills";
 
 export default function App() {
   return (
@@ -38,9 +39,14 @@ export default function App() {
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
+            {/* Orders */}
             <Route path="/orders" element={<Order />} />
             <Route path="/bulk-booking" element={<BulkBooking />} />
             <Route path="/order-log" element={<OrderLog />} />
+            <Route path="/order-log" element={<OrderLog />} />
+            <Route path="/airway-bills" element={<AirwayBills />} />
+
+
             <Route path="/verified" element={<VerifiedShipper />} />
             <Route path="/unverified" element={<UnVerifiedShipper />} />
             <Route path="/calendar" element={<Calendar />} />

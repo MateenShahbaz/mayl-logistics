@@ -13,13 +13,6 @@ const tabs = [
   { label: "Booked", count: 0 },
   { label: "Unbooked", count: 0 },
   { label: "In Transit", count: 0 },
-  { label: "Delivered", count: 0 },
-  { label: "Returned", count: 0 },
-  { label: "Cancelled", count: 0 },
-  { label: "Expired", count: 0 },
-  { label: "Lost", count: 0 },
-  { label: "Stolen", count: 0 },
-  { label: "Damage", count: 0 },
 ];
 const options = [
   { value: "all", label: "All" },
@@ -34,8 +27,8 @@ const options = [
   { value: "stolen", label: "Stolen" },
   { value: "damage", label: "Damage" },
 ];
-const searchOptions = ["ORDER #", "TRACKING #", "NAME #", "PHONE #"];
-export default function OrderLog() {
+const searchOptions = ["ORDER #", "TRACKING #"];
+export default function AirwayBills() {
   const [activeTab, setActiveTab] = useState("All");
   const [searchType, setSearchType] = useState("ORDER #");
   const [selectedOption, setSelectedOption] = useState<string>("");
@@ -48,7 +41,7 @@ export default function OrderLog() {
         title="Mayl Logistics"
         description="Order log with filters and search"
       />
-      <PageBreadcrumb pageTitle="Order Log" />
+      <PageBreadcrumb pageTitle="Airway Bills" />
       <div className="space-y-6">
         <div
           className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]`}
