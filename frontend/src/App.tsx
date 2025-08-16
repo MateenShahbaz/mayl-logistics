@@ -26,6 +26,8 @@ import UnVerifiedShipper from "./pages/shippers/unVerifiedShipper/UnVerifiedShip
 import BulkBooking from "./pages/orders/BulkBooking";
 import OrderLog from "./pages/orders/OrderLog";
 import AirwayBills from "./pages/orders/AirwayBills";
+import LoadSheet from "./pages/orders/LoadSheet";
+import LogSheet from "./pages/orders/LogSheet";
 
 export default function App() {
   return (
@@ -45,6 +47,8 @@ export default function App() {
             <Route path="/order-log" element={<OrderLog />} />
             <Route path="/order-log" element={<OrderLog />} />
             <Route path="/airway-bills" element={<AirwayBills />} />
+            <Route path="/load-sheet" element={<LoadSheet />} />
+            <Route path="/log-sheet" element={<LogSheet />} />
 
 
             <Route path="/verified" element={<VerifiedShipper />} />

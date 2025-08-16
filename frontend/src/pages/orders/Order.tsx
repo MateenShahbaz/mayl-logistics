@@ -101,12 +101,6 @@ const Order = () => {
 
                   <div className="col-span-2 lg:col-span-1">
                     <Label>
-                      Order Date <span className="text-error-500">*</span>
-                    </Label>
-                    <Input type="date" placeholder="Select Order Date" />
-                  </div>
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>
                       Airway Bill Copies{" "}
                       <span className="text-error-500">*</span>
                     </Label>

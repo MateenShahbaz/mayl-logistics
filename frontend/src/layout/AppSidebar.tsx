@@ -37,7 +37,7 @@ const navItems: NavItem[] = [
       { name: "Order Log", path: "/order-log", pro: false },
       { name: "Airway Bills", path: "/airway-bills", pro: false },
       { name: "Generate Load Sheet", path: "/load-sheet", pro: false },
-      { name: "Load Sheets Logs", path: "/log-sheet", pro: false },
+      { name: "Load Sheet Logs", path: "/log-sheet", pro: false },
     ],
   },
   {
