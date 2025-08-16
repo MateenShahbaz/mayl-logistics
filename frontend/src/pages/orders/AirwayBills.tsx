@@ -3,7 +3,6 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Tab from "../../components/ui/button/Tab";
 import Label from "../../components/form/Label";
-import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
 import { DatePicker } from "antd";
 import Button from "../../components/ui/button/Button";
@@ -34,6 +33,7 @@ export default function AirwayBills() {
   const [selectedOption, setSelectedOption] = useState<string>("");
   const handleSelectChange = (value: string) => {
     setSelectedOption(value);
+    console.log(selectedOption);
   };
   return (
     <>

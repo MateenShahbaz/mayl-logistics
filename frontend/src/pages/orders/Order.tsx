@@ -13,6 +13,8 @@ const Order = () => {
   const [selectedOption, setSelectedOption] = useState<string>("");
   const handleSelectChange = (value: string) => {
     setSelectedOption(value);
+    console.log(selectedOption);
+    
   };
   const options = [
     { value: "normal", label: "Normal" },

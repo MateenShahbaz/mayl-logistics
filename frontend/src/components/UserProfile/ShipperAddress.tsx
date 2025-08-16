@@ -15,31 +15,20 @@ const ShipperAddress = () => {
     null
   );
 
-  const openCityModal = () => setActiveModal("city");
   const openAddressModal = () => setActiveModal("address");
   const closeModal = () => setActiveModal(null);
 
   const [selectedOption, setSelectedOption] = useState<string>("");
   const handleSelectChange = (value: string) => {
     setSelectedOption(value);
+    console.log(selectedOption);
   };
   const options = [
     { value: "pickup", label: "Pick up" },
     { value: "return", label: "Return" },
   ];
 
-  const cities = [
-    { value: "Karachi", label: "Karachi" },
-    { value: "Lahore", label: "Lahore" },
-    { value: "Islamabad", label: "Islamabad" },
-    { value: "Rawalpindi", label: "Rawalpindi" },
-    { value: "Faisalabad", label: "Faisalabad" },
-    { value: "Multan", label: "Multan" },
-    { value: "Peshawar", label: "Peshawar" },
-    { value: "Quetta", label: "Quetta" },
-    { value: "Sialkot", label: "Sialkot" },
-    { value: "Hyderabad", label: "Hyderabad" },
-  ];
+
   return (
     <>
       <div
