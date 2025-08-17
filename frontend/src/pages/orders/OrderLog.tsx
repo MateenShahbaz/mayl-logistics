@@ -49,7 +49,7 @@ export default function OrderLog() {
         title="Mayl Logistics"
         description="Order log with filters and search"
       />
-      <PageBreadcrumb pageTitle="Order Log" />
+      <PageBreadcrumb pageTitle="Order Logs" />
       <div className="space-y-6">
         <div
           className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]`}

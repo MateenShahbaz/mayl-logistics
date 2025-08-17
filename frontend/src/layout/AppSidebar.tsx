@@ -34,7 +34,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Create Orders", path: "/orders", pro: false },
       { name: "Bulk Booking", path: "/bulk-booking", pro: false },
-      { name: "Order Log", path: "/order-log", pro: false },
+      { name: "Order Logs", path: "/order-log", pro: false },
       { name: "Airway Bills", path: "/airway-bills", pro: false },
       { name: "Generate Load Sheet", path: "/load-sheet", pro: false },
       { name: "Load Sheet Logs", path: "/log-sheet", pro: false },
@@ -344,7 +344,7 @@ const AppSidebar: React.FC = () => {
             </>
           ) : (
             <img
-              src="/images/logo/logo-icon.svg"
+              src="./images/logo/web-logo.png"
               alt="Logo"
               width={32}
               height={32}

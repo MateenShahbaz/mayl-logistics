@@ -45,7 +45,6 @@ export default function App() {
             <Route path="/orders" element={<Order />} />
             <Route path="/bulk-booking" element={<BulkBooking />} />
             <Route path="/order-log" element={<OrderLog />} />
-            <Route path="/order-log" element={<OrderLog />} />
             <Route path="/airway-bills" element={<AirwayBills />} />
             <Route path="/load-sheet" element={<LoadSheet />} />
             <Route path="/log-sheet" element={<LogSheet />} />
