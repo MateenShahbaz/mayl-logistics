@@ -28,6 +28,8 @@ import OrderLog from "./pages/orders/OrderLog";
 import AirwayBills from "./pages/orders/AirwayBills";
 import LoadSheet from "./pages/orders/LoadSheet";
 import LogSheet from "./pages/orders/LogSheet";
+import { CashPayment } from "./pages/payments/CashPayment";
+import TransactionLog from "./pages/payments/TransactionLog";
 
 export default function App() {
   return (
@@ -48,6 +50,10 @@ export default function App() {
             <Route path="/airway-bills" element={<AirwayBills />} />
             <Route path="/load-sheet" element={<LoadSheet />} />
             <Route path="/log-sheet" element={<LogSheet />} />
+
+            {/* payment */}
+            <Route path="/cash-payment" element={<CashPayment />} />
+            <Route path="/transaction-log" element={<TransactionLog />} />
 
 
             <Route path="/verified" element={<VerifiedShipper />} />

@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
     name: "Payments",
     subItems: [
       { name: "Cash Payment Reciept (CPR)", path: "/cash-payment", pro: false },
-      { name: "Transaction Log", path: "/settlement-payment", pro: false },
+      { name: "Transaction Log", path: "/transaction-log", pro: false },
     ],
   },
   {
