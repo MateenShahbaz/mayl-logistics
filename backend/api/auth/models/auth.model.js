@@ -1,7 +1,56 @@
 const mongoose = require("mongoose");
 
 const AuthSchema = new mongoose.Schema(
-  {},
+  {
+    firstName: {
+      type: String,
+      required: true,
+    },
+    lastName: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    phoneNo: {
+      type: Number,
+      required: true,
+    },
+    shipperNumber: {
+      type: Number,
+      required: false,
+    },
+    role: {
+      type: String,
+      required: true,
+    },
+    bankName: {
+      type: String,
+      required: false,
+    },
+    accountNumber: {
+      type: Number,
+      required: false,
+    },
+    accountName: {
+      type: String,
+      required: false,
+    },
+    status: {
+      type: Boolean,
+      default: true,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+  },
   {
     timestamps: true,
   }
