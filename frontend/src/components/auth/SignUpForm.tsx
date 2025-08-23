@@ -27,8 +27,6 @@ export default function SignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // ✅ Validation
     if (
       !formData.fname ||
       !formData.lname ||
@@ -43,14 +41,25 @@ export default function SignUpForm() {
       errorToast("You must accept the Terms and Conditions.");
       return;
     }
-
+    const data = {
+      firstName: formData.fname,
+      lastName: formData.lname,
+      email: formData.email,
+      password: formData.password,
+      phoneNo: formData.phone,
+    };
     try {
       const res = await apiCaller({
         method: "POST",
         url: "/auth/signup",
-        data: formData,
+        data: data,
       });
-      console.log(res);
+      if (res?.code === 200) {
+        const checkverified = res.data?.data?.isVerified;
+        if (!checkverified) {
+          navigate("/processing");
+        }
+      }
     } catch (err: any) {
       errorToast(err.message || "Something went wrong");
     }

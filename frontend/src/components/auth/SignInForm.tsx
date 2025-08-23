@@ -1,33 +1,64 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import { errorToast, loadingToast, successToast } from "../../core/core-index";
+import { errorToast, successToast } from "../../core/core-index";
+import { apiCaller } from "../../core/API/ApiServices";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-  const [loading, setLoading] = useState(false); // 👈 new state
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return; // prevent multiple submits
-    setLoading(true);
 
-    const closeLoading = loadingToast();
+    if (!formData.email || !formData.password) {
+      errorToast("Email and password are required!");
+      return;
+    }
 
-    setTimeout(() => {
-      closeLoading();
-      if (Math.random() > 0.5) {
-        successToast("Signed in successfully!");
-      } else {
-        errorToast("Invalid email or password.");
+    try {
+      const res = await apiCaller({
+        method: "POST",
+        url: "/auth/login",
+        data: {
+          email: formData.email,
+          password: formData.password,
+        },
+      });
+
+      if (res?.code === 200) {
+        const isVerified = res.data?.data?.isVerified;
+
+        if (!isVerified) {
+          navigate("/processing");
+        } else {
+          const token = res.data?.token;
+          if (token) {
+            localStorage.setItem("token", token);
+          }
+          successToast("Signed in successfully!");
+
+          navigate("/");
+        }
       }
-      setLoading(false); // 👈 re-enable button
-    }, 2000);
+    } catch (err: any) {
+      errorToast(err.message || "Invalid email or password");
+    }
   };
 
   return (
@@ -46,20 +77,32 @@ export default function SignInForm() {
           <div>
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
+                {/* Email */}
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>
                   </Label>
-                  <Input placeholder="info@gmail.com" />
+                  <Input
+                    type="email"
+                    name="email"
+                    placeholder="info@gmail.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
                 </div>
+
+                {/* Password */}
                 <div>
                   <Label>
                     Password <span className="text-error-500">*</span>
                   </Label>
                   <div className="relative">
                     <Input
+                      name="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleChange}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -73,6 +116,8 @@ export default function SignInForm() {
                     </span>
                   </div>
                 </div>
+
+                {/* Remember Me + Forgot Password */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Checkbox checked={isChecked} onChange={setIsChecked} />
@@ -87,19 +132,17 @@ export default function SignInForm() {
                     Forgot password?
                   </Link>
                 </div>
+
+                {/* Submit Button */}
                 <div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    size="sm"
-                    disabled={loading} // 👈 disable while loading
-                  >
-                    {loading ? "Signing in..." : "Sign in"}
+                  <Button type="submit" className="w-full" size="sm">
+                    Sign In
                   </Button>
                 </div>
               </div>
             </form>
 
+            {/* Redirect to Signup */}
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
                 Don&apos;t have an account?{" "}

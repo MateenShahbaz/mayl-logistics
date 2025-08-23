@@ -8,7 +8,6 @@ import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import Verification from "./pages/AuthPages/Verification";
-import CreateProfile from "./pages/AuthPages/CreateProfile";
 import Order from "./pages/orders/Order";
 import VerifiedShipper from "./pages/shippers/verifiedShipper/VerifiedShipper";
 import UnVerifiedShipper from "./pages/shippers/unVerifiedShipper/UnVerifiedShipper";
@@ -20,6 +19,7 @@ import LogSheet from "./pages/orders/LogSheet";
 import { CashPayment } from "./pages/payments/CashPayment";
 import TransactionLog from "./pages/payments/TransactionLog";
 import ProtectedRoute from "./utils/ProtectedRoute";
+import Processing from "./pages/AuthPages/Processing";
 
 export default function App() {
   return (
@@ -52,7 +52,8 @@ export default function App() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/verification" element={<Verification />} />
-        <Route path="/create-profile" element={<CreateProfile />} />
+        <Route path="/processing" element={<Processing />} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

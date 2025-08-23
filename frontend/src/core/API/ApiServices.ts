@@ -1,5 +1,7 @@
+// src/utils/api.ts
 import axios, { AxiosRequestConfig } from "axios";
 import { errorToast } from "../core-index";
+import { loadingEmitter } from "../../utils/loadingEmitter";
 
 const API = axios.create({
   baseURL: "http://localhost:8888",
@@ -13,8 +15,20 @@ API.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  loadingEmitter.emit("start");
   return config;
 });
+
+API.interceptors.response.use(
+  (response) => {
+    loadingEmitter.emit("stop");
+    return response;
+  },
+  (error) => {
+    loadingEmitter.emit("stop")
+    return Promise.reject(error);
+  }
+);
 
 export const apiCaller = async <T = any>(
   config: AxiosRequestConfig
@@ -22,10 +36,9 @@ export const apiCaller = async <T = any>(
   try {
     const response = await API.request(config);
 
-    if (response.data.code === 200) {
-      return response.data; // success
+    if (response?.data?.code === 200) {
+      return response.data;
     }
-
     return null;
   } catch (error: any) {
     const status = error?.response?.status;
@@ -34,7 +47,7 @@ export const apiCaller = async <T = any>(
     if (status === 401) {
       localStorage.removeItem("token");
       errorToast("Unauthorized access. Please login again.");
-      window.location.href = "/signin"; // 🔥 no reload, react-router way
+      window.location.href = "/signin";
       return null;
     }
 

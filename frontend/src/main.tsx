@@ -7,15 +7,19 @@ import App from "./App.tsx";
 import { AppWrapper } from "./components/common/PageMeta.tsx";
 import { ThemeProvider } from "./context/ThemeContext.tsx";
 import { MessageProvider } from "./MessageProvider.tsx";
+import "antd/dist/reset.css";
+import { LoadingProvider } from "./context/LoadingContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider>
-      <AppWrapper>
-        <MessageProvider>
-          <App />
-        </MessageProvider>
-      </AppWrapper>
-    </ThemeProvider>
+    <LoadingProvider>
+      <ThemeProvider>
+        <AppWrapper>
+          <MessageProvider>
+            <App />
+          </MessageProvider>
+        </AppWrapper>
+      </ThemeProvider>
+    </LoadingProvider>
   </StrictMode>
 );

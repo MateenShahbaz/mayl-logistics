@@ -16,7 +16,10 @@ exports.signup = async (req, res) => {
 
     const existingUser = await authModel.findOne({ email });
     if (existingUser) {
-      return response.data_error_message({message:"Email already registered"}, res);
+      return response.data_error_message(
+        { message: "Email already registered" },
+        res
+      );
     }
 
     const hashedPassword = bcrypt.hashSync(password, 8);
