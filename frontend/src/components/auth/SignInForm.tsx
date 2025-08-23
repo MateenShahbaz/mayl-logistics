@@ -5,10 +5,31 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
+import { errorToast, loadingToast, successToast } from "../../core/core-index";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [loading, setLoading] = useState(false); // 👈 new state
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return; // prevent multiple submits
+    setLoading(true);
+
+    const closeLoading = loadingToast();
+
+    setTimeout(() => {
+      closeLoading();
+      if (Math.random() > 0.5) {
+        successToast("Signed in successfully!");
+      } else {
+        errorToast("Invalid email or password.");
+      }
+      setLoading(false); // 👈 re-enable button
+    }, 2000);
+  };
+
   return (
     <div className="flex flex-col flex-1">
       <div className="w-full max-w-md pt-10 mx-auto"></div>
@@ -23,17 +44,17 @@ export default function SignInForm() {
             </p>
           </div>
           <div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
                   <Label>
-                    Email <span className="text-error-500">*</span>{" "}
+                    Email <span className="text-error-500">*</span>
                   </Label>
                   <Input placeholder="info@gmail.com" />
                 </div>
                 <div>
                   <Label>
-                    Password <span className="text-error-500">*</span>{" "}
+                    Password <span className="text-error-500">*</span>
                   </Label>
                   <div className="relative">
                     <Input
@@ -67,8 +88,13 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm">
-                    Sign in
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    size="sm"
+                    disabled={loading} // 👈 disable while loading
+                  >
+                    {loading ? "Signing in..." : "Sign in"}
                   </Button>
                 </div>
               </div>
@@ -76,7 +102,7 @@ export default function SignInForm() {
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                Don&apos;t have an account? {""}
+                Don&apos;t have an account?{" "}
                 <Link
                   to="/signup"
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
