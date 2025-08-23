@@ -9,14 +9,14 @@ exports.signup = async (req, res) => {
 
     if (!firstName || !lastName || !email || !password || !phoneNo) {
       return response.validation_error_message(
-        { data: "All fields are required" },
+        { message: "All fields are required" },
         res
       );
     }
 
     const existingUser = await authModel.findOne({ email });
     if (existingUser) {
-      return response.data_error_message("Email already registered", res);
+      return response.data_error_message({message:"Email already registered"}, res);
     }
 
     const hashedPassword = bcrypt.hashSync(password, 8);
