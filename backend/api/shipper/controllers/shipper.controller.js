@@ -3,12 +3,16 @@ const authModel = require("../../auth/models/auth.model");
 
 exports.verifiedList = async (req, res) => {
   try {
+    const { limit = 5, skip = 0 } = req.query;
+
     const verifiedUsers = await authModel
       .find({
         isVerified: true,
         role: "Shipper",
       })
-      .select("-password -role -updatedAt");
+      .select("-password -role -updatedAt")
+      .limit(Number(limit))
+      .skip(Number(skip));
     const verifiedUsersCount = await authModel.countDocuments({
       isVerified: true,
       role: "Shipper",
@@ -23,12 +27,16 @@ exports.verifiedList = async (req, res) => {
 
 exports.nonVerifiedList = async (req, res) => {
   try {
+    const { limit = 5, skip = 0 } = req.query;
+
     const nonVerifiedUsers = await authModel
       .find({
         isVerified: false,
         role: "Shipper",
       })
-      .select("-password -role -updatedAt");
+      .select("-password -role -updatedAt")
+      .limit(Number(limit))
+      .skip(Number(skip));
     const nonVerifiedUsersCount = await authModel.countDocuments({
       isVerified: false,
       role: "Shipper",
@@ -59,7 +67,7 @@ exports.verifyShipper = async (req, res) => {
     );
 
     if (!updatedUser) {
-      return response.data_error_message({message: "User not found"}, res);
+      return response.data_error_message({ message: "User not found" }, res);
     }
 
     const data = {
