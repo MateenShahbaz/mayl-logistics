@@ -3,8 +3,25 @@ import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
+interface User {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNo: string;
+  shipperNumber?: string;
+  role: string;
+  bankName?: string;
+  accountNumber?: number;
+  accountName?: string;
+  status: boolean;
+  isVerified: boolean;
+}
 
-export default function UserInfoCard() {
+interface Props {
+  user: User | null;
+}
+export default function UserInfoCard({ user }: Props) {
   const { isOpen, closeModal } = useModal();
   const handleSave = () => {
     // Handle save logic here
@@ -25,7 +42,7 @@ export default function UserInfoCard() {
                 First Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Musharof
+                {user?.firstName}
               </p>
             </div>
 
@@ -34,7 +51,7 @@ export default function UserInfoCard() {
                 Last Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Chowdhury
+                {user?.lastName}
               </p>
             </div>
 
@@ -43,7 +60,7 @@ export default function UserInfoCard() {
                 Email address
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                randomuser@gmail.com
+                {user?.email}
               </p>
             </div>
 
@@ -52,7 +69,7 @@ export default function UserInfoCard() {
                 Phone
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                +92 363 398 46
+                {user?.phoneNo}
               </p>
             </div>
 
@@ -61,7 +78,7 @@ export default function UserInfoCard() {
                 Bio
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Shipper
+                {user?.role}
               </p>
             </div>
 
@@ -70,7 +87,7 @@ export default function UserInfoCard() {
                 Shipper Number
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                00001
+                {user?.shipperNumber}
               </p>
             </div>
           </div>

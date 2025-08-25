@@ -107,11 +107,17 @@ exports.login = async (req, res) => {
     const data = {
       message: "Login successful",
       data: {
-        userId: user._id,
-        email: user.email,
+        id: user._id,
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
+        phoneNo: user?.phoneNo || "",
+        email: user.email || "",
         role: user.role,
         shipperNumber: user.shipperNumber,
         isVerified: user.isVerified,
+        bankName: user?.bankName || "",
+        accountNumber: user?.accountNumber || "",
+        accountName: user?.accountName || "",
       },
       token: user.isVerified ? token : null,
     };

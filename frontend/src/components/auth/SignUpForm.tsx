@@ -4,7 +4,7 @@ import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
-import { errorToast, successToast } from "../../core/core-index";
+import { errorToast } from "../../core/core-index";
 import { apiCaller } from "../../core/API/ApiServices";
 
 export default function SignUpForm() {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import PageMeta from "../../../components/common/PageMeta";
@@ -26,8 +26,8 @@ interface Shipper {
 const UnVerifiedShipper = () => {
   const [dataSource, setDataSource] = useState<Shipper[]>([]);
   const [totalCounts, settotalCounts] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pagesize, setPagesize] = useState(5);
+  const [, setPage] = useState(1);
+  const [, setPagesize] = useState(5);
   const [selectedId, setSelectedId] = useState("");
   const { isOpen, openModal, closeModal } = useModal();
 

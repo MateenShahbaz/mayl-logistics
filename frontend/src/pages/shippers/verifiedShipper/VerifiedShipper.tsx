@@ -22,8 +22,8 @@ interface Shipper {
 const VerifiedShipper = () => {
   const [dataSource, setDataSource] = useState<Shipper[]>([]);
   const [totalCounts, settotalCounts] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pagesize, setPagesize] = useState(5);
+  const [, setPage] = useState(1);
+  const [, setPagesize] = useState(5);
 
   const fetchDetails = async (currentpage = 1, currentpagesize = 5) => {
     let skipSize;

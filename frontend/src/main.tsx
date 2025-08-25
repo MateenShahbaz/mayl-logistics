@@ -9,17 +9,20 @@ import { ThemeProvider } from "./context/ThemeContext.tsx";
 import { MessageProvider } from "./MessageProvider.tsx";
 // import "antd/dist/reset.css";
 import { LoadingProvider } from "./context/LoadingContext.tsx";
+import { AuthProvider } from "./context/AuthContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <LoadingProvider>
-      <ThemeProvider>
-        <AppWrapper>
-          <MessageProvider>
-            <App />
-          </MessageProvider>
-        </AppWrapper>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <AppWrapper>
+            <MessageProvider>
+              <App />
+            </MessageProvider>
+          </AppWrapper>
+        </ThemeProvider>
+      </AuthProvider>
     </LoadingProvider>
   </StrictMode>
 );

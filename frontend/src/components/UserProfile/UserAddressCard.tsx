@@ -1,4 +1,22 @@
-export default function UserAddressCard() {
+interface User {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNo: string;
+  shipperNumber?: string;
+  role: string;
+  bankName?: string;
+  accountNumber?: number;
+  accountName?: string;
+  status: boolean;
+  isVerified: boolean;
+}
+
+interface Props {
+  user: User | null;
+}
+export default function UserAddressCard({ user }: Props) {
   return (
     <>
       <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
@@ -14,7 +32,7 @@ export default function UserAddressCard() {
                   Bank Name
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  United Bank Limited
+                  {user?.bankName}
                 </p>
               </div>
 
@@ -23,7 +41,7 @@ export default function UserAddressCard() {
                   Account Number
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  10008329374898
+                  {user?.accountNumber}
                 </p>
               </div>
 
@@ -32,7 +50,7 @@ export default function UserAddressCard() {
                   Account Name
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  Musharof
+                  {user?.accountName}
                 </p>
               </div>
             </div>

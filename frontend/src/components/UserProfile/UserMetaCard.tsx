@@ -3,12 +3,51 @@ import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
+import { useEffect, useState } from "react";
+interface User {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNo: string;
+  shipperNumber?: string;
+  role: string;
+  bankName?: string;
+  accountNumber?: number;
+  accountName?: string;
+  status: boolean;
+  isVerified: boolean;
+}
 
-export default function UserMetaCard() {
+interface Props {
+  user: User | null;
+}
+
+export default function UserMetaCard({ user }: Props) {
   const { isOpen, openModal, closeModal } = useModal();
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
+  const [formData, setFormData] = useState<User | null>(null);
+
+  useEffect(() => {
+    if (isOpen && user) {
+      setFormData({ ...user });
+    }
+  }, [isOpen, user]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (!formData) return;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault(); 
+    if (!formData) return;
+
+    // This JSON is ready to send to backend
+    console.log("Saving changes:", formData);
     closeModal();
   };
   return (
@@ -17,15 +56,18 @@ export default function UserMetaCard() {
         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
             <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
-              <img src="/images/user/owner.jpg" alt="user" />
+              <img
+                src={`https://avatar.iran.liara.run/username?username=${user?.firstName}+${user?.lastName}`}
+                alt="user"
+              />
             </div>
             <div className="order-3 xl:order-2">
               <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
-                Musharof Chowdhury
+                {user?.firstName} {user?.lastName}
               </h4>
               <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Shipper
+                  {user?.role}
                 </p>
               </div>
             </div>
@@ -63,93 +105,141 @@ export default function UserMetaCard() {
               Update your details to keep your profile up-to-date.
             </p>
           </div>
-          <form className="flex flex-col">
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-              {/* Personal Information */}
-              <div className="mt-7">
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Personal Information
-                </h5>
+          {formData && (
+            <form onSubmit={handleSave} className="flex flex-col">
+              <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+                {/* Personal Information */}
+                <div className="mt-7">
+                  <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                    Personal Information
+                  </h5>
 
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>
-                      First Name <span className="text-error-500">*</span>
-                    </Label>
-                    <Input type="text" value="Musharof" />
+                  <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>
+                        First Name <span className="text-error-500">*</span>
+                      </Label>
+                      <Input
+                        name="firstName"
+                        type="text"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>
+                        Last Name <span className="text-error-500">*</span>
+                      </Label>
+                      <Input
+                        name="lastName"
+                        type="text"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>
+                        Email Address <span className="text-error-500">*</span>
+                      </Label>
+                      <Input
+                        name="email"
+                        type="text"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>
+                        Phone <span className="text-error-500">*</span>
+                      </Label>
+                      <Input
+                        name="phoneNo"
+                        type="text"
+                        value={formData.phoneNo}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>Bio</Label>
+                      <Input type="text" value={formData.role} disabled />
+                    </div>
+
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>Shipper Number</Label>
+                      <Input
+                        type="text"
+                        value={formData.shipperNumber}
+                        disabled
+                      />
+                    </div>
                   </div>
+                </div>
+                {/* Bank Information */}
+                <div className="mt-7">
+                  <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                    Bank Information
+                  </h5>
 
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>
-                      Last Name <span className="text-error-500">*</span>
-                    </Label>
-                    <Input type="text" value="Chowdhury" />
-                  </div>
+                  <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>
+                        Bank Name <span className="text-error-500">*</span>
+                      </Label>
+                      <Input
+                        name="bankName"
+                        type="text"
+                        value={formData.bankName || ""}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
 
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>
-                      Email Address <span className="text-error-500">*</span>
-                    </Label>
-                    <Input type="text" value="randomuser@pimjo.com" />
-                  </div>
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>
+                        Account Number <span className="text-error-500">*</span>
+                      </Label>
+                      <Input
+                        name="accountNumber"
+                        type="text"
+                        value={formData.accountNumber || ""}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
 
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>
-                      Phone <span className="text-error-500">*</span>
-                    </Label>
-                    <Input type="text" value="+09 363 398 46" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Bio</Label>
-                    <Input type="text" value="Shipper" disabled />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Shipper Number</Label>
-                    <Input type="text" value="00001" disabled />
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>
+                        Account Name <span className="text-error-500">*</span>
+                      </Label>
+                      <Input
+                        name="accountName"
+                        type="text"
+                        value={formData.accountName || ""}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-              {/* Bank Information */}
-              <div className="mt-7">
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Bank Information
-                </h5>
-
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>
-                      Bank Name <span className="text-error-500">*</span>
-                    </Label>
-                    <Input type="text" value="United Bank Limited" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>
-                      Account Number <span className="text-error-500">*</span>
-                    </Label>
-                    <Input type="text" value="10008329374898" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>
-                      Account Name <span className="text-error-500">*</span>
-                    </Label>
-                    <Input type="text" value="Musharof" />
-                  </div>
-                </div>
+              <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                <Button size="sm" variant="outline" onClick={closeModal}>
+                  Close
+                </Button>
+                <Button size="sm" type="submit">
+                  Save Changes
+                </Button>
               </div>
-            </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
-                Close
-              </Button>
-              <Button size="sm" onClick={handleSave}>
-                Save Changes
-              </Button>
-            </div>
-          </form>
+            </form>
+          )}
         </div>
       </Modal>
     </>

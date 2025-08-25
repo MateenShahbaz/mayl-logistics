@@ -7,17 +7,19 @@ import UserInfoCard from "../components/UserProfile/UserInfoCard";
 import UserAddressCard from "../components/UserProfile/UserAddressCard";
 import PageMeta from "../components/common/PageMeta";
 import ShipperAddress from "../components/UserProfile/ShipperAddress";
+import { useAuth } from "../context/AuthContext";
 
 const UserProfiles: React.FC = () => {
+  const { user } = useAuth();
   const items: TabsProps["items"] = [
     {
       key: "1",
       label: "Profile Info",
       children: (
         <div className="space-y-6">
-          <UserMetaCard />
-          <UserInfoCard />
-          <UserAddressCard />
+          <UserMetaCard user={user}  />
+          <UserInfoCard user={user} />
+          <UserAddressCard user={user} />
         </div>
       ),
     },

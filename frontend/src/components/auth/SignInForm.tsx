@@ -7,12 +7,13 @@ import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
 import { errorToast, successToast } from "../../core/core-index";
 import { apiCaller } from "../../core/API/ApiServices";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const navigate = useNavigate();
-
+  const { setUser } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -50,6 +51,7 @@ export default function SignInForm() {
           const token = res.data?.token;
           if (token) {
             localStorage.setItem("token", token);
+            setUser(res.data?.data);
           }
           successToast("Signed in successfully!");
 
