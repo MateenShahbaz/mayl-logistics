@@ -26,3 +26,6 @@ app.use("/shipper", jwtauth, shipperroutes);
 
 const userSettingRoutes = require("./api/userSetting/routes/userSetting.route");
 app.use("/userSetting", jwtauth, userSettingRoutes);
+
+const addressRoutes = require("./api/address/routes/address.route");
+app.use("/address", jwtauth, addressRoutes);

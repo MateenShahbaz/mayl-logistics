@@ -4,6 +4,9 @@ import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { useEffect, useState } from "react";
+import { apiCaller } from "../../core/API/ApiServices";
+import { successToast } from "../../core/core-index";
+import { useAuth } from "../../context/AuthContext";
 interface User {
   _id: string;
   firstName: string;
@@ -26,6 +29,7 @@ interface Props {
 export default function UserMetaCard({ user }: Props) {
   const { isOpen, openModal, closeModal } = useModal();
   const [formData, setFormData] = useState<User | null>(null);
+  const { setUser } = useAuth();
 
   useEffect(() => {
     if (isOpen && user) {
@@ -42,13 +46,29 @@ export default function UserMetaCard({ user }: Props) {
     });
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault(); 
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!formData) return;
 
-    // This JSON is ready to send to backend
-    console.log("Saving changes:", formData);
-    closeModal();
+    const data = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      phoneNo: formData.phoneNo,
+      bankName: formData.bankName,
+      accountNumber: formData.accountNumber,
+      accountName: formData.accountName,
+      email: formData.email,
+    };
+    const response = await apiCaller({
+      method: "PUT",
+      url: "/userSetting/edit",
+      data: data,
+    });
+    if (response.code === 200) {
+      successToast("Updated successfully");
+      setUser(response.data);
+      closeModal();
+    }
   };
   return (
     <>

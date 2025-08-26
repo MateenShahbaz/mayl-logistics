@@ -1,19 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // import { useModal } from "../../hooks/useModal";
 import Label from "../form/Label";
 import Select from "../form/Select";
-import BasicTableOne from "../tables/BasicTables/BasicTableOne";
 import Button from "../ui/button/Button";
 import { Modal } from "../ui/modal";
 import Switch from "../form/switch/Switch";
 import TextArea from "../form/input/TextArea";
 import Input from "../form/input/InputField";
+import type { ColumnsType } from "antd/es/table";
+import Table from "antd/es/table";
+import { apiCaller } from "../../core/API/ApiServices";
+import Badge from "../ui/badge/Badge";
+
+interface Address {
+  _id: string;
+  type: "pickup" | "return";
+  city: string;
+  address: string;
+  default: boolean;
+}
 
 const ShipperAddress = () => {
   //   const { isOpen, openModal, closeModal } = useModal();
   const [activeModal, setActiveModal] = useState<null | "city" | "address">(
     null
   );
+  const [dataSource, setDataSource] = useState<Address[]>([]);
+  const [totalCounts, settotalCounts] = useState(0);
+  const [, setPage] = useState(1);
+  const [, setPagesize] = useState(5);
 
   const openAddressModal = () => setActiveModal("address");
   const closeModal = () => setActiveModal(null);
@@ -23,11 +38,87 @@ const ShipperAddress = () => {
     setSelectedOption(value);
     console.log(selectedOption);
   };
+
+  const fetchDetails = async (currentpage = 1, currentpagesize = 5) => {
+    let skipSize;
+    skipSize = currentpage == 1 ? 0 : (currentpage - 1) * currentpagesize;
+
+    const response = await apiCaller({
+      method: "GET",
+      url: `/address/list?limit=${currentpagesize}&skip=${skipSize}`,
+    });
+    if (response.code === 200) {
+      setDataSource(response.data);
+      settotalCounts(response.totalRecords);
+    }
+  };
+
+  useEffect(() => {
+    fetchDetails();
+  }, []);
+
+  const handlePagination = async (page: number, pageSize: number) => {
+    setPage(page);
+    setPagesize(pageSize);
+    fetchDetails(page, pageSize);
+  };
+
   const options = [
     { value: "pickup", label: "Pick up" },
     { value: "return", label: "Return" },
   ];
 
+  const columns: ColumnsType<Address> = [
+    {
+      title: "#",
+      dataIndex: "_id",
+      key: "index",
+      render: (_: any, __: Address, index: number) => index + 1,
+    },
+    {
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+      render: (type: string) => (
+        <div color={type === "pickup" ? "blue" : "green"}>
+          {type.toUpperCase()}
+        </div>
+      ),
+    },
+    {
+      title: "City",
+      dataIndex: "city",
+      key: "city",
+    },
+    {
+      title: "Address",
+      dataIndex: "address",
+      key: "address",
+    },
+    {
+      title: "Default",
+      dataIndex: "default",
+      key: "default",
+      render: (isDefault: boolean) =>
+        <Badge color={isDefault ? "success" : "error"} size="sm">
+          {isDefault? "Active" : "InActive"}
+        </Badge>
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <div>
+          {/* <Button type="link" onClick={() => handleEdit(record._id)}>
+            Edit
+          </Button>
+          <Button type="link" danger onClick={() => handleDelete(record._id)}>
+            Delete
+          </Button> */}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <>
@@ -52,7 +143,22 @@ const ShipperAddress = () => {
         {/* Card Body */}
         <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
           <div className="space-y-6">
-            <BasicTableOne />
+            <Table
+              rowKey="_id"
+              dataSource={dataSource}
+              columns={columns}
+              scroll={{ x: "max-content" }}
+              pagination={{
+                total: totalCounts,
+                showTotal: (total, range) =>
+                  `Showing ${range[0]} to ${range[1]} of ${total} entries`,
+                showSizeChanger: true,
+                pageSizeOptions: [5, 15, 35, 50],
+                defaultPageSize: 5,
+                defaultCurrent: 1,
+                onChange: (page, pageSize) => handlePagination(page, pageSize),
+              }}
+            />
           </div>
         </div>
       </div>
