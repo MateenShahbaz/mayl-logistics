@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, setUser } = useAuth();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   function toggleDropdown() {
     setIsOpen(!isOpen);
   }
@@ -18,7 +18,7 @@ export default function UserDropdown() {
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    navigate("/signin")
+    navigate("/signin");
   };
   return (
     <div className="relative">
@@ -27,7 +27,10 @@ export default function UserDropdown() {
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img src="/images/user/owner.jpg" alt="User" />
+          <img
+            src={`https://avatar.iran.liara.run/username?username=${user?.firstName}+${user?.lastName}`}
+            alt="User"
+          />
         </span>
 
         <span className="block mr-1 font-medium text-theme-sm">

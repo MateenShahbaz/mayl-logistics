@@ -1,6 +1,7 @@
 import React from "react";
 
 interface TextareaProps {
+  name?: string;
   placeholder?: string; // Placeholder text
   rows?: number; // Number of rows
   value?: string; // Current value
@@ -9,9 +10,11 @@ interface TextareaProps {
   disabled?: boolean; // Disabled state
   error?: boolean; // Error state
   hint?: string; // Hint text to display
+  required?: boolean;
 }
 
 const TextArea: React.FC<TextareaProps> = ({
+  name,
   placeholder = "Enter your message", // Default placeholder
   rows = 3, // Default number of rows
   value = "", // Default value
@@ -20,6 +23,7 @@ const TextArea: React.FC<TextareaProps> = ({
   disabled = false, // Disabled state
   error = false, // Error state
   hint = "", // Default hint text
+  required = false,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (onChange) {
@@ -40,11 +44,13 @@ const TextArea: React.FC<TextareaProps> = ({
   return (
     <div className="relative">
       <textarea
+        name={name}
         placeholder={placeholder}
         rows={rows}
         value={value}
         onChange={handleChange}
         disabled={disabled}
+        required={required}
         className={textareaClasses}
       />
       {hint && (

@@ -4,9 +4,9 @@ const response = require("../../../response");
 // Add new address
 exports.add = async (req, res) => {
   try {
-    const { type, city, address, default: isDefault } = req.body;
+    const { type, city, address, isDefault } = req.body;
 
-    if (!type || !city || !address) {
+    if (!type || !address) {
       return response.data_error_message(
         { message: "Missing required fields" },
         res
@@ -22,7 +22,7 @@ exports.add = async (req, res) => {
 
     const newAddress = new addressModel({
       type,
-      city,
+      city : "Lahore",
       address,
       default: isDefault || false,
       userId: req.user.id,
@@ -60,8 +60,8 @@ exports.view = async (req, res) => {
 // Edit address
 exports.edit = async (req, res) => {
   try {
-    const { type, city, address, default: isDefault } = req.body;
-
+    const { type, city, address, isDefault } = req.body;
+    
     const addressDoc = await addressModel.findOne({
       _id: req.params.id,
       userId: req.user.id,
@@ -72,7 +72,7 @@ exports.edit = async (req, res) => {
     }
 
     if (type !== undefined) addressDoc.type = type;
-    if (city !== undefined) addressDoc.city = city;
+    // if (city !== undefined) addressDoc.city = city;
     if (address !== undefined) addressDoc.address = address;
 
     if (isDefault !== undefined) {
