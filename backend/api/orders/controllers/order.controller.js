@@ -5,6 +5,16 @@ exports.add = async (req, res) => {
   try {
     const { shipperNumber, id } = req.user;
 
+    if (
+      !req.body.orderType ||
+      !req.body.shipperInfo.pickupAddress ||
+      !req.body.shipperInfo.returnAddress
+    ) {
+      return response.validation_error_message(
+        { message: "Missing field required" },
+        res
+      );
+    }
     const lastOrder = await orderModel
       .findOne({ userId: id })
       .sort({ createdAt: -1 })

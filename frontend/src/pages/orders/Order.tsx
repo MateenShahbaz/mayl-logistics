@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { apiCaller } from "../../core/API/ApiServices";
 import { Table } from "antd";
 import { Link } from "react-router";
+import { successToast } from "../../core/core-index";
 
 interface Order {
   _id: string;
@@ -21,6 +22,28 @@ interface Order {
   weight: number;
 }
 
+type FormData = {
+  orderType: string;
+  refNumber: string;
+  amount: number;
+  airwayBillsCopy: number;
+  items: number;
+  weight: number;
+  customer: {
+    name: string;
+    contactNumber: string;
+    deliverCity: string;
+    deliveryAddress: string;
+  };
+  shipperInfo: {
+    pickupAddress: string;
+    returnAddress: string;
+  };
+  orderDetail: string;
+  notes: string;
+  [key: string]: any; // 👈 allows indexing with string
+};
+
 const Order = () => {
   const [dataSource, setDataSource] = useState<Order[]>([]);
   const [totalCounts, settotalCounts] = useState(0);
@@ -30,10 +53,54 @@ const Order = () => {
   const [returnAddress, setReturnAddress] = useState<any[]>([]);
   const [defaultPickup, setDefaultPickup] = useState<any>(null);
   const [defaultReturn, setDefaultReturn] = useState<any>(null);
-  const [selectedOption, setSelectedOption] = useState<string>("");
-  const handleSelectChange = (value: string) => {
-    setSelectedOption(value);
-    console.log(selectedOption);
+  const [formData, setFormData] = useState<FormData>({
+    orderType: "",
+    refNumber: "",
+    amount: 0,
+    airwayBillsCopy: 0,
+    items: 0,
+    weight: 0,
+    customer: {
+      name: "",
+      contactNumber: "",
+      deliverCity: "Lahore",
+      deliveryAddress: "",
+    },
+    shipperInfo: {
+      pickupAddress: defaultPickup,
+      returnAddress: defaultReturn,
+    },
+    orderDetail: "",
+    notes: "",
+  });
+
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleNestedChange = (parent: string, field: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [parent]: { ...prev[parent], [field]: value },
+    }));
+  };
+
+  const handleOrderTypeChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, orderType: value }));
+  };
+
+  const handlePickupAddressChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      shipperInfo: { ...prev.shipperInfo, pickupAddress: value },
+    }));
+  };
+
+  const handleReturnAddressChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      shipperInfo: { ...prev.shipperInfo, returnAddress: value },
+    }));
   };
   const options = [
     { value: "normal", label: "Normal" },
@@ -75,8 +142,12 @@ const Order = () => {
       setPickupAddress(pickupOptions);
       setReturnAddress(returnOptions);
 
-      const defaultPickupOption = response.data.pickupaddress.find((opt: any) => opt.default === true);
-      const defaultReturnOption = response.data.returnaddress.find((opt: any) => opt.default === true);
+      const defaultPickupOption = response.data.pickupaddress.find(
+        (opt: any) => opt.default === true
+      );
+      const defaultReturnOption = response.data.returnaddress.find(
+        (opt: any) => opt.default === true
+      );
 
       if (defaultPickupOption) setDefaultPickup(defaultPickupOption.address);
       if (defaultReturnOption) setDefaultReturn(defaultReturnOption.address);
@@ -92,6 +163,40 @@ const Order = () => {
     fetchDetails();
     fetchDropdowns();
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const data = {
+      orderType: formData.orderType,
+      refNumber: formData.refNumber,
+      amount: formData.amount,
+      airwayBillsCopy: formData.airwayBillsCopy,
+      items: formData.items,
+      weight: formData.weight,
+      customer: {
+        name: formData.customer.name,
+        contactNumber: formData.customer.contactNumber,
+        deliverCity: "Lahore",
+        deliveryAddress: formData.customer.deliveryAddress,
+      },
+      shipperInfo: {
+        pickupAddress: formData.shipperInfo?.pickupAddress || defaultPickup,
+        returnAddress: formData.shipperInfo?.returnAddress || defaultReturn,
+      },
+      orderDetail: formData.orderDetail,
+      notes: formData.notes,
+    };
+    const response = await apiCaller({
+      method: "POST",
+      url: "/order/add",
+      data: data,
+    });
+    if (response.code === 200) {
+      fetchDetails()
+      successToast("Order added successfully");
+      closeModal();
+    }
+  };
 
   const columns = [
     {
@@ -188,7 +293,7 @@ const Order = () => {
               Add Order Information
             </h4>
           </div>
-          <form className="flex flex-col">
+          <form className="flex flex-col" onSubmit={handleSubmit}>
             <div className="custom-scrollbar h-[500px] overflow-y-auto px-2 pb-3">
               {/* Order Information */}
               <div className="mt-7">
@@ -202,9 +307,9 @@ const Order = () => {
                     </Label>
                     <Select
                       options={options}
-                      defaultValue=""
+                      defaultValue={formData.orderType}
                       placeholder="Choose Order Type"
-                      onChange={handleSelectChange}
+                      onChange={handleOrderTypeChange}
                     />
                   </div>
 
@@ -213,14 +318,27 @@ const Order = () => {
                       Order Reference Number{" "}
                       <span className="text-error-500">*</span>
                     </Label>
-                    <Input type="number" placeholder="Order red Number" />
+                    <Input
+                      type="number"
+                      placeholder="Order Ref Number"
+                      value={formData.refNumber}
+                      onChange={(e) =>
+                        handleChange("refNumber", e.target.value)
+                      }
+                      required
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
                     <Label>
                       Order Amount <span className="text-error-500">*</span>
                     </Label>
-                    <Input type="number" value="0" />
+                    <Input
+                      type="number"
+                      value={formData.amount}
+                      onChange={(e) => handleChange("amount", e.target.value)}
+                      required
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
@@ -228,19 +346,36 @@ const Order = () => {
                       Airway Bill Copies{" "}
                       <span className="text-error-500">*</span>
                     </Label>
-                    <Input type="number" value="1" />
+                    <Input
+                      type="number"
+                      value={formData.airwayBillsCopy}
+                      onChange={(e) =>
+                        handleChange("airwayBillsCopy", e.target.value)
+                      }
+                      required
+                    />
                   </div>
                   <div className="col-span-2 lg:col-span-1">
                     <Label>
                       Items <span className="text-error-500">*</span>
                     </Label>
-                    <Input type="number" value="1" />
+                    <Input
+                      type="number"
+                      value={formData.items}
+                      onChange={(e) => handleChange("items", e.target.value)}
+                      required
+                    />
                   </div>
                   <div className="col-span-2 lg:col-span-1">
                     <Label>
                       Booking Weight <span className="text-gray-400">(kg)</span>
                     </Label>
-                    <Input type="number" value="0" />
+                    <Input
+                      type="number"
+                      value={formData.weight}
+                      onChange={(e) => handleChange("weight", e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
               </div>
@@ -255,14 +390,34 @@ const Order = () => {
                     <Label>
                       Customer Name <span className="text-error-500">*</span>
                     </Label>
-                    <Input type="text" placeholder="Enter Customer Name" />
+                    <Input
+                      type="text"
+                      value={formData.customer.name}
+                      onChange={(e) =>
+                        handleNestedChange("customer", "name", e.target.value)
+                      }
+                      required
+                      placeholder="Enter customer name"
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
                     <Label>
                       Contact Number <span className="text-error-500">*</span>
                     </Label>
-                    <Input type="number" placeholder="03xxxxxxxxx" />
+                    <Input
+                      type="number"
+                      value={formData.customer.contactNumber}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "customer",
+                          "contactNumber",
+                          e.target.value
+                        )
+                      }
+                      required
+                      placeholder="03XXXXXXXXX"
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
@@ -276,7 +431,19 @@ const Order = () => {
                     <Label>
                       Delivery Address <span className="text-error-500">*</span>
                     </Label>
-                    <Input type="text" placeholder="Customer Address" />
+                    <Input
+                      type="text"
+                      value={formData.customer.deliveryAddress}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "customer",
+                          "deliveryAddress",
+                          e.target.value
+                        )
+                      }
+                      required
+                      placeholder="Enter customer address"
+                    />
                   </div>
                 </div>
               </div>
@@ -299,9 +466,10 @@ const Order = () => {
                     </Label>
                     <Select
                       options={pickupAddress}
-                      defaultValue={defaultPickup}
-                      placeholder="Choose Pickup Address"
-                      onChange={handleSelectChange}
+                      defaultValue={
+                        defaultPickup || formData.shipperInfo.pickupAddress
+                      }
+                      onChange={handlePickupAddressChange}
                     />
                   </div>
                   <div className="col-span-2 lg:col-span-1">
@@ -312,9 +480,10 @@ const Order = () => {
                     <Label>Return Address</Label>
                     <Select
                       options={returnAddress}
-                      defaultValue={defaultReturn}
-                      placeholder="Choose Return Address"
-                      onChange={handleSelectChange}
+                      defaultValue={
+                        defaultReturn || formData.shipperInfo.returnAddress
+                      }
+                      onChange={handleReturnAddressChange}
                     />
                   </div>
                 </div>
@@ -327,11 +496,21 @@ const Order = () => {
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div className="col-span-2">
                     <Label>Order Detail</Label>
-                    <Input type="text" />
+                    <Input
+                      type="text"
+                      value={formData.orderDetail}
+                      onChange={(e) =>
+                        handleChange("orderDetail", e.target.value)
+                      }
+                    />
                   </div>
                   <div className="col-span-2">
                     <Label>Notes</Label>
-                    <Input type="text" />
+                    <Input
+                      type="text"
+                      value={formData.notes}
+                      onChange={(e) => handleChange("notes", e.target.value)}
+                    />
                   </div>
                 </div>
               </div>
@@ -340,8 +519,10 @@ const Order = () => {
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm">Save</Button>
-              <Button size="sm" variant="ghost">
+              <Button size="sm" type="submit">
+                Save
+              </Button>
+              <Button size="sm" variant="ghost" type="submit">
                 Save & Print
               </Button>
             </div>
