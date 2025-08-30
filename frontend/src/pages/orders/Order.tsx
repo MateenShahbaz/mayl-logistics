@@ -1,20 +1,39 @@
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-import BasicTableOne from "../../components/tables/BasicTables/BasicTableOne";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../../components/ui/modal";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Button from "../../components/ui/button/Button";
 import Select from "../../components/form/Select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiCaller } from "../../core/API/ApiServices";
+import { Table } from "antd";
+import { Link } from "react-router";
+
+interface Order {
+  _id: string;
+  orderNumber: string;
+  orderType: string;
+  refNumber: string;
+  amount: number;
+  items: number;
+  weight: number;
+}
 
 const Order = () => {
+  const [dataSource, setDataSource] = useState<Order[]>([]);
+  const [totalCounts, settotalCounts] = useState(0);
+  const [, setPage] = useState(1);
+  const [, setPagesize] = useState(5);
+  const [pickupAddress, setPickupAddress] = useState<any[]>([]);
+  const [returnAddress, setReturnAddress] = useState<any[]>([]);
+  const [defaultPickup, setDefaultPickup] = useState<any>(null);
+  const [defaultReturn, setDefaultReturn] = useState<any>(null);
   const [selectedOption, setSelectedOption] = useState<string>("");
   const handleSelectChange = (value: string) => {
     setSelectedOption(value);
     console.log(selectedOption);
-    
   };
   const options = [
     { value: "normal", label: "Normal" },
@@ -22,6 +41,93 @@ const Order = () => {
     { value: "replacement", label: "Replacement" },
   ];
   const { isOpen, openModal, closeModal } = useModal();
+
+  const fetchDetails = async (currentpage = 1, currentpagesize = 5) => {
+    let skipSize;
+    skipSize = currentpage == 1 ? 0 : (currentpage - 1) * currentpagesize;
+
+    const response = await apiCaller({
+      method: "GET",
+      url: `/order/list?limit=${currentpagesize}&skip=${skipSize}`,
+    });
+    if (response.code === 200) {
+      setDataSource(response.data);
+      settotalCounts(response.totalRecords);
+    }
+  };
+
+  const fetchDropdowns = async () => {
+    const response = await apiCaller({
+      method: "GET",
+      url: "/dropdown/addressList",
+    });
+    if (response.code === 200) {
+      const pickupOptions = response.data.pickupaddress.map((addr: any) => ({
+        value: addr.address,
+        label: `${addr.address} (${addr.city})`,
+      }));
+
+      const returnOptions = response.data.returnaddress.map((addr: any) => ({
+        value: addr.address,
+        label: `${addr.address} (${addr.city})`,
+      }));
+
+      setPickupAddress(pickupOptions);
+      setReturnAddress(returnOptions);
+
+      const defaultPickupOption = response.data.pickupaddress.find((opt: any) => opt.default === true);
+      const defaultReturnOption = response.data.returnaddress.find((opt: any) => opt.default === true);
+
+      if (defaultPickupOption) setDefaultPickup(defaultPickupOption.address);
+      if (defaultReturnOption) setDefaultReturn(defaultReturnOption.address);
+    }
+  };
+
+  const handlePagination = async (page: number, pageSize: number) => {
+    setPage(page);
+    setPagesize(pageSize);
+    fetchDetails(page, pageSize);
+  };
+  useEffect(() => {
+    fetchDetails();
+    fetchDropdowns();
+  }, []);
+
+  const columns = [
+    {
+      title: "Order Number",
+      dataIndex: "orderNumber",
+      key: "orderNumber",
+      render: (text: string, record: any) => {
+        return <Link to={`/orders/${record._id}`}>#{text}</Link>;
+      },
+    },
+    {
+      title: "Type",
+      dataIndex: "orderType",
+      key: "orderType",
+    },
+    {
+      title: "Reference",
+      dataIndex: "refNumber",
+      key: "refNumber",
+    },
+    {
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+    },
+    {
+      title: "Items",
+      dataIndex: "items",
+      key: "items",
+    },
+    {
+      title: "Weight (kg)",
+      dataIndex: "weight",
+      key: "weight",
+    },
+  ];
   return (
     <>
       <div>
@@ -52,7 +158,23 @@ const Order = () => {
             {/* Card Body */}
             <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
               <div className="space-y-6">
-                <BasicTableOne />
+                <Table
+                  rowKey="_id"
+                  dataSource={dataSource}
+                  columns={columns}
+                  scroll={{ x: "max-content" }}
+                  pagination={{
+                    total: totalCounts,
+                    showTotal: (total, range) =>
+                      `Showing ${range[0]} to ${range[1]} of ${total} entries`,
+                    showSizeChanger: true,
+                    pageSizeOptions: [5, 15, 35, 50],
+                    defaultPageSize: 5,
+                    defaultCurrent: 1,
+                    onChange: (page, pageSize) =>
+                      handlePagination(page, pageSize),
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -176,8 +298,8 @@ const Order = () => {
                       Pickup Address <span className="text-error-500">*</span>
                     </Label>
                     <Select
-                      options={options}
-                      defaultValue=""
+                      options={pickupAddress}
+                      defaultValue={defaultPickup}
                       placeholder="Choose Pickup Address"
                       onChange={handleSelectChange}
                     />
@@ -189,8 +311,8 @@ const Order = () => {
                   <div className="col-span-2 lg:col-span-1">
                     <Label>Return Address</Label>
                     <Select
-                      options={options}
-                      defaultValue=""
+                      options={returnAddress}
+                      defaultValue={defaultReturn}
                       placeholder="Choose Return Address"
                       onChange={handleSelectChange}
                     />
@@ -219,7 +341,9 @@ const Order = () => {
                 Close
               </Button>
               <Button size="sm">Save</Button>
-              <Button size="sm" variant="ghost">Save & Print</Button>
+              <Button size="sm" variant="ghost">
+                Save & Print
+              </Button>
             </div>
           </form>
         </div>
