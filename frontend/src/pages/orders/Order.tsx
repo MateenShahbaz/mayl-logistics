@@ -169,12 +169,7 @@ const Order = () => {
                     <Label>
                       Pickup City <span className="text-error-500">*</span>
                     </Label>
-                    <Select
-                      options={options}
-                      defaultValue=""
-                      placeholder="Choose Pickup City"
-                      onChange={handleSelectChange}
-                    />
+                    <Input type="text" value="Lahore" disabled />
                   </div>
                   <div className="col-span-2 lg:col-span-1">
                     <Label>
@@ -189,12 +184,7 @@ const Order = () => {
                   </div>
                   <div className="col-span-2 lg:col-span-1">
                     <Label>Return City</Label>
-                    <Select
-                      options={options}
-                      defaultValue=""
-                      placeholder="Choose Return City"
-                      onChange={handleSelectChange}
-                    />
+                    <Input type="text" value="Lahore" disabled />
                   </div>
                   <div className="col-span-2 lg:col-span-1">
                     <Label>Return Address</Label>

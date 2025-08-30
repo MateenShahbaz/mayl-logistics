@@ -29,3 +29,9 @@ app.use("/userSetting", jwtauth, userSettingRoutes);
 
 const addressRoutes = require("./api/address/routes/address.route");
 app.use("/address", jwtauth, addressRoutes);
+
+const dropdownRoutes = require("./api/dropdown/routes/dropdown.route");
+app.use("/dropdown", jwtauth, dropdownRoutes);
+
+const orderRoutes = require("./api/orders/routes/order.route");
+app.use("/order", jwtauth, orderRoutes);
