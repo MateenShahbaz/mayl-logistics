@@ -37,13 +37,24 @@ exports.edit = async (req, res) => {
       bankName,
       accountNumber,
       accountName,
-      email
+      email,
     } = req.body;
 
     // find user by logged-in user's id
     const user = await userModel.findById(req.user.id);
     if (!user) {
       return response.data_error_message({ message: "User not found" }, res);
+    }
+
+    if (email && email !== user.email) {
+      const existingUser = await userModel.findOne({ email });
+      if (existingUser) {
+        return response.validation_error_message(
+          { message: "Email already in use" },
+          res
+        );
+      }
+      user.email = email;
     }
 
     // update allowed fields only

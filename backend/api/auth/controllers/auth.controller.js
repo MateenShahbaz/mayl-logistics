@@ -26,7 +26,7 @@ exports.signup = async (req, res) => {
 
     const lastUser = await authModel.findOne().sort({ createdAt: -1 });
 
-    let nextShipperNumber = "00001";
+    let nextShipperNumber = "10001";
     if (lastUser && lastUser.shipperNumber) {
       const lastNumber = parseInt(lastUser.shipperNumber, 10);
       nextShipperNumber = String(lastNumber + 1).padStart(5, "0");
