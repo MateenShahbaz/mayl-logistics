@@ -129,8 +129,13 @@ const ShipperAddress = () => {
     }
   };
 
-  const handleEdit = (record: Address) => {
-    setFormData(record);
+  const handleEdit = (record: any) => {
+    setFormData({
+      type: record?.type,
+      city: "Lahore",
+      address: record?.address,
+      isDefault: record?.default,
+    });
     setEditingId(record._id || null);
     openModal();
   };

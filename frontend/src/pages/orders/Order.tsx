@@ -11,6 +11,10 @@ import { apiCaller } from "../../core/API/ApiServices";
 import { Table } from "antd";
 import { Link } from "react-router";
 import { successToast } from "../../core/core-index";
+import Badge from "../../components/ui/badge/Badge";
+import { MoreDotIcon } from "../../icons";
+import { Dropdown } from "../../components/ui/dropdown/Dropdown";
+import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
 
 interface Order {
   _id: string;
@@ -20,6 +24,7 @@ interface Order {
   amount: number;
   items: number;
   weight: number;
+  status: string;
 }
 
 type FormData = {
@@ -53,6 +58,8 @@ const Order = () => {
   const [returnAddress, setReturnAddress] = useState<any[]>([]);
   const [defaultPickup, setDefaultPickup] = useState<any>(null);
   const [defaultReturn, setDefaultReturn] = useState<any>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
   const [formData, setFormData] = useState<FormData>({
     orderType: "",
     refNumber: "",
@@ -73,6 +80,40 @@ const Order = () => {
     orderDetail: "",
     notes: "",
   });
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  function toggleDropdown(recordId: string) {
+    setOpenDropdownId(openDropdownId === recordId ? null : recordId);
+  }
+
+  function closeDropdown() {
+    setOpenDropdownId(null);
+  }
+
+  const closeHandle = () => {
+    closeModal();
+    setFormData({
+      orderType: "",
+      refNumber: "",
+      amount: 0,
+      airwayBillsCopy: 0,
+      items: 0,
+      weight: 0,
+      customer: {
+        name: "",
+        contactNumber: "",
+        deliverCity: "Lahore",
+        deliveryAddress: "",
+      },
+      shipperInfo: {
+        pickupAddress: defaultPickup,
+        returnAddress: defaultReturn,
+      },
+      orderDetail: "",
+      notes: "",
+    });
+    setEditingId(null);
+  };
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -182,29 +223,87 @@ const Order = () => {
       shipperInfo: {
         pickupAddress: formData.shipperInfo?.pickupAddress || defaultPickup,
         returnAddress: formData.shipperInfo?.returnAddress || defaultReturn,
+        pickupCity: "Lahore",
+        returnCity: "Lahore",
       },
       orderDetail: formData.orderDetail,
       notes: formData.notes,
     };
+    const url = editingId ? `/order/edit/${editingId}` : "/order/add";
+    const method = editingId ? "PUT" : "POST";
     const response = await apiCaller({
-      method: "POST",
-      url: "/order/add",
+      method,
+      url,
       data: data,
     });
     if (response.code === 200) {
-      fetchDetails()
-      successToast("Order added successfully");
+      fetchDetails();
+      successToast(
+        editingId ? "Order updated successfully" : "Order added successfully"
+      );
       closeModal();
+      setEditingId(null);
+      setFormData({
+        orderType: "",
+        refNumber: "",
+        amount: 0,
+        airwayBillsCopy: 0,
+        items: 0,
+        weight: 0,
+        customer: {
+          name: "",
+          contactNumber: "",
+          deliverCity: "Lahore",
+          deliveryAddress: "",
+        },
+        shipperInfo: {
+          pickupAddress: defaultPickup,
+          returnAddress: defaultReturn,
+        },
+        orderDetail: "",
+        notes: "",
+      });
     }
   };
 
+  const editHandle = async (record: Order) => {
+    const response = await apiCaller({
+      method: "GET",
+      url: `/order/view/${record?._id}`,
+    });
+    if (response.code === 200) {
+      const data = response.data;
+      setFormData({
+        orderType: data.orderType,
+        refNumber: data.refNumber,
+        amount: data.amount,
+        airwayBillsCopy: data.airwayBillsCopy,
+        items: data.items,
+        weight: data.weight,
+        customer: {
+          name: data.customer.name,
+          contactNumber: data.customer.contactNumber,
+          deliverCity: "Lahore",
+          deliveryAddress: data.customer.deliveryAddress,
+        },
+        shipperInfo: {
+          pickupAddress: data.shipperInfo?.pickupAddress,
+          returnAddress: data.shipperInfo?.returnAddress,
+        },
+        orderDetail: data.orderDetail,
+        notes: data.notes,
+      });
+      setEditingId(data?._id);
+      openModal();
+    }
+  };
   const columns = [
     {
       title: "Order Number",
       dataIndex: "orderNumber",
       key: "orderNumber",
       render: (text: string, record: any) => {
-        return <Link to={`/orders/${record._id}`}>#{text}</Link>;
+        return <Link to={`/order-view/${record._id}`}>#{text}</Link>;
       },
     },
     {
@@ -228,9 +327,52 @@ const Order = () => {
       key: "items",
     },
     {
-      title: "Weight (kg)",
-      dataIndex: "weight",
-      key: "weight",
+      title: "Status",
+      key: "status",
+      render: (record: Order) => (
+        <Badge color="success" size="sm">
+          {record.status}
+        </Badge>
+      ),
+    },
+    {
+      title: "Action",
+      dataIndex: "Action",
+      render: (_: any, record: Order) => {
+        return (
+          <div className="relative inline-block">
+            <button
+              className="dropdown-toggle"
+              onClick={() => toggleDropdown(record._id)}
+            >
+              <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 size-6" />
+            </button>
+            <Dropdown
+              isOpen={openDropdownId === record._id}
+              onClose={closeDropdown}
+              className="w-40 p-2"
+            >
+              <DropdownItem
+                onItemClick={closeDropdown}
+                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              >
+                <Link to={`/order-view/${record._id}`}>View</Link>;
+              </DropdownItem>
+              {record?.status === "Unbooked" && (
+                <DropdownItem
+                  onItemClick={() => {
+                    editHandle(record);
+                    closeDropdown();
+                  }}
+                  className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                >
+                  Edit
+                </DropdownItem>
+              )}
+            </Dropdown>
+          </div>
+        );
+      },
     },
   ];
   return (
@@ -286,7 +428,11 @@ const Order = () => {
         </div>
       </div>
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+      <Modal
+        isOpen={isOpen}
+        onClose={closeHandle}
+        className="max-w-[700px] m-4"
+      >
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
@@ -319,7 +465,7 @@ const Order = () => {
                       <span className="text-error-500">*</span>
                     </Label>
                     <Input
-                      type="number"
+                      type="text"
                       placeholder="Order Ref Number"
                       value={formData.refNumber}
                       onChange={(e) =>
@@ -466,9 +612,7 @@ const Order = () => {
                     </Label>
                     <Select
                       options={pickupAddress}
-                      defaultValue={
-                        defaultPickup || formData.shipperInfo.pickupAddress
-                      }
+                      defaultValue={formData.shipperInfo.pickupAddress}
                       onChange={handlePickupAddressChange}
                     />
                   </div>
@@ -480,9 +624,7 @@ const Order = () => {
                     <Label>Return Address</Label>
                     <Select
                       options={returnAddress}
-                      defaultValue={
-                        defaultReturn || formData.shipperInfo.returnAddress
-                      }
+                      defaultValue={formData.shipperInfo.returnAddress}
                       onChange={handleReturnAddressChange}
                     />
                   </div>
@@ -516,7 +658,7 @@ const Order = () => {
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
+              <Button size="sm" variant="outline" onClick={closeHandle}>
                 Close
               </Button>
               <Button size="sm" type="submit">

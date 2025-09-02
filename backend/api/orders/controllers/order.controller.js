@@ -32,6 +32,7 @@ exports.add = async (req, res) => {
     const newOrder = await orderModel.create({
       ...req.body,
       orderNumber,
+      status: "Unbooked",
       userId: id,
     });
 
@@ -50,13 +51,64 @@ exports.list = async (req, res) => {
       .find({
         userId: req.user.id,
       })
-      .select("orderNumber orderType refNumber amount items weight")
+      .select("orderNumber orderType refNumber amount items weight status")
       .limit(Number(limit))
       .skip(Number(skip));
 
     const orderCount = await orderModel.countDocuments({ userId: req.user.id });
 
     response.success_message(orders, res, orderCount);
+  } catch (error) {
+    console.log(error.message);
+    return response.error_message(error.message, res);
+  }
+};
+
+exports.view = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return response.validation_error_message(
+        { message: "Id is required" },
+        res
+      );
+    }
+    const order = await orderModel.findById(id);
+
+    response.success_message(order, res);
+  } catch (error) {
+    console.log(error.message);
+    return response.error_message(error.message, res);
+  }
+};
+
+exports.edit = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (
+      !req.body.orderType ||
+      !req.body.shipperInfo?.pickupAddress ||
+      !req.body.shipperInfo?.returnAddress
+    ) {
+      return response.validation_error_message(
+        { message: "Missing required fields" },
+        res
+      );
+    }
+
+    const order = await orderModel.findOne({ _id: id, userId: req.user.id });
+
+    if (!order) {
+      return response.data_error_message({ message: "Order not found" }, res);
+    }
+
+    Object.assign(order, req.body);
+
+    await order.save();
+
+    response.success_message({ message: "Order updated successfully" }, res);
   } catch (error) {
     console.log(error.message);
     return response.error_message(error.message, res);

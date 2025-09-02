@@ -21,6 +21,7 @@ import TransactionLog from "./pages/payments/TransactionLog";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Processing from "./pages/AuthPages/Processing";
 import ViewShipper from "./pages/shippers/verifiedShipper/ViewShipper";
+import OrderView from "./pages/orders/OrderView";
 
 export default function App() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/verified" element={<VerifiedShipper />} />
           <Route path="/unverified" element={<UnVerifiedShipper />} />
           <Route path="/shipper-view/:id" element={<ViewShipper />} />
+          <Route path="/order-view/:id" element={<OrderView />} />
         </Route>
 
         {/* Public routes */}

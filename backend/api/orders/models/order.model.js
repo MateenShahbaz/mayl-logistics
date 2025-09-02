@@ -76,6 +76,11 @@ const OrderSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    status: {
+      type: String,
+      required: true,
+      enum: ["Unbooked"]
+    },
     userId: {
       type: mongoose.Schema.ObjectId,
       ref: "User",

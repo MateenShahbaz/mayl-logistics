@@ -48,14 +48,14 @@ const VerifiedShipper = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const { isOpen, openModal, closeModal } = useModal();
-  const [isOpens, setIsOpen] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
-  function toggleDropdown() {
-    setIsOpen(!isOpens);
+  function toggleDropdown(recordId: string) {
+    setOpenDropdownId(openDropdownId === recordId ? null : recordId);
   }
 
   function closeDropdown() {
-    setIsOpen(false);
+    setOpenDropdownId(null);
   }
 
   const handleChange = (e: any) => {
@@ -174,7 +174,10 @@ const VerifiedShipper = () => {
       key: "name",
       render: (record: Shipper) => {
         return (
-          <Link to={`/shipper-view/${record._id}`} className="flex items-center gap-3">
+          <Link
+            to={`/shipper-view/${record._id}`}
+            className="flex items-center gap-3"
+          >
             <img
               src={`https://avatar.iran.liara.run/username?username=${record.firstName}+${record.lastName}`}
               alt={record.firstName}
@@ -208,7 +211,7 @@ const VerifiedShipper = () => {
       key: "status",
       render: (record: Shipper) => (
         <Badge color={record.status ? "success" : "error"} size="sm">
-          {record.status? "Active": "Inactive"}
+          {record.status ? "Active" : "Inactive"}
         </Badge>
       ),
     },
@@ -224,11 +227,14 @@ const VerifiedShipper = () => {
       render: (_, record) => {
         return (
           <div className="relative inline-block">
-            <button className="dropdown-toggle" onClick={toggleDropdown}>
+            <button
+              className="dropdown-toggle"
+              onClick={() => toggleDropdown(record._id)}
+            >
               <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 size-6" />
             </button>
             <Dropdown
-              isOpen={isOpens}
+              isOpen={openDropdownId === record._id}
               onClose={closeDropdown}
               className="w-40 p-2"
             >
@@ -236,7 +242,12 @@ const VerifiedShipper = () => {
                 onItemClick={closeDropdown}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
               >
-                View
+                <Link
+                  to={`/shipper-view/${record._id}`}
+                  className="flex items-center gap-3 w-full"
+                >
+                  View
+                </Link>
               </DropdownItem>
               <DropdownItem
                 onItemClick={() => {
