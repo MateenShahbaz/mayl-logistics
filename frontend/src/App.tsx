@@ -20,6 +20,7 @@ import { CashPayment } from "./pages/payments/CashPayment";
 import TransactionLog from "./pages/payments/TransactionLog";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Processing from "./pages/AuthPages/Processing";
+import ViewShipper from "./pages/shippers/verifiedShipper/ViewShipper";
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/transaction-log" element={<TransactionLog />} />
           <Route path="/verified" element={<VerifiedShipper />} />
           <Route path="/unverified" element={<UnVerifiedShipper />} />
+          <Route path="/shipper-view/:id" element={<ViewShipper />} />
         </Route>
 
         {/* Public routes */}
