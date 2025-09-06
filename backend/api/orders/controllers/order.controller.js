@@ -114,3 +114,31 @@ exports.edit = async (req, res) => {
     return response.error_message(error.message, res);
   }
 };
+
+exports.trackOrder = async (req, res) => {
+  try {
+    const { tackingNo } = req.params;
+
+    if (!tackingNo) {
+      return response.validation_error_message(
+        { message: "Tracking number is required" },
+        res
+      );
+    }
+    const order = await orderModel.findOne({ orderNumber: tackingNo });
+
+    if (!order) {
+      return response.data_error_message(
+        {
+          message: "Tracked Order not found",
+        },
+        res
+      );
+    }
+
+    response.success_message(order._id, res);
+  } catch (error) {
+    console.log(error.message);
+    return response.error_message(error.message, res);
+  }
+};

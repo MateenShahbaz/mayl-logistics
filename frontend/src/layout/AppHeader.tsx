@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 // import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 // import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
+import { errorToast } from "../core/core-index";
+import { apiCaller } from "../core/API/ApiServices";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
-
+  const navigate = useNavigate();
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
       toggleSidebar();
@@ -39,6 +41,25 @@ const AppHeader: React.FC = () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const trackingNo = inputRef.current?.value.trim();
+      if (!trackingNo) return errorToast("Please enter a tracking number");
+      const track = String(trackingNo);
+      const response = await apiCaller({
+        method: "GET",
+        url: `/order/tracking/${track}`,
+      });
+      if (response.code === 200) {
+        if (inputRef.current) {
+          inputRef.current.value = "";
+        }
+        navigate(`/order-view/${response.data}`);
+      }
+    }
+  };
 
   return (
     <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 lg:border-b">
@@ -139,6 +160,7 @@ const AppHeader: React.FC = () => {
                 <input
                   ref={inputRef}
                   type="text"
+                  onKeyDown={handleKeyDown}
                   placeholder="Search with Tracking Number"
                   className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 xl:w-[430px]"
                 />
