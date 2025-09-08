@@ -5,9 +5,17 @@ const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res) => {
   try {
-    const { firstName, lastName, email, password, phoneNo } = req.body;
+    const { firstName, lastName, email, password, phoneNo, merchant } =
+      req.body;
 
-    if (!firstName || !lastName || !email || !password || !phoneNo) {
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !phoneNo ||
+      !merchant
+    ) {
       return response.validation_error_message(
         { message: "All fields are required" },
         res
@@ -36,6 +44,7 @@ exports.signup = async (req, res) => {
       firstName,
       lastName,
       email,
+      merchant,
       password: hashedPassword,
       phoneNo,
       shipperNumber: nextShipperNumber,
@@ -99,6 +108,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user?.role,
         shipperNumber: user?.shipperNumber,
+        merchant: user?.merchant,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
@@ -115,6 +125,7 @@ exports.login = async (req, res) => {
         role: user.role,
         shipperNumber: user.shipperNumber,
         isVerified: user.isVerified,
+        merchant: user?.merchant || "",
         bankName: user?.bankName || "",
         accountNumber: user?.accountNumber || "",
         accountName: user?.accountName || "",

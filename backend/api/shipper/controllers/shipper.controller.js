@@ -1,6 +1,7 @@
 const response = require("../../../response");
 const authModel = require("../../auth/models/auth.model");
 const bcrypt = require("bcryptjs");
+const addressModel = require("../../address/models/address.model");
 
 exports.verifiedList = async (req, res) => {
   try {
@@ -94,6 +95,9 @@ exports.add = async (req, res) => {
       accountNumber,
       accountName,
       status,
+      merchant,
+      returnAdd,
+      pickup,
     } = req.body;
 
     if (!firstName || !lastName || !email || !password || !phoneNo) {
@@ -127,6 +131,7 @@ exports.add = async (req, res) => {
       email,
       password: hashedPassword,
       phoneNo,
+      merchant,
       shipperNumber: nextShipperNumber,
       role: "Shipper",
       bankName: bankName || "",
@@ -137,6 +142,32 @@ exports.add = async (req, res) => {
     });
 
     await newUser.save();
+
+    const addressDocs = [];
+
+    if (pickup) {
+      addressDocs.push({
+        type: "pickup",
+        city: "Lahore",
+        address: pickup,
+        default: true,
+        userId: newUser._id,
+      });
+    }
+
+    if (returnAdd) {
+      addressDocs.push({
+        type: "return",
+        city: "Lahore",
+        address: returnAdd,
+        default: true,
+        userId: newUser._id,
+      });
+    }
+
+    if (addressDocs.length > 0) {
+      await addressModel.insertMany(addressDocs);
+    }
 
     const data = {
       message: "User Register Successfully",
@@ -161,6 +192,7 @@ exports.edit = async (req, res) => {
       accountNumber,
       accountName,
       status,
+      merchant,
     } = req.body;
 
     const user = await authModel.findById(id);
@@ -181,6 +213,7 @@ exports.edit = async (req, res) => {
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
     user.email = email || user.email;
+    user.merchant = merchant || user.merchant;
     user.phoneNo = phoneNo || user.phoneNo;
     user.bankName = bankName || user.bankName;
     user.accountNumber = accountNumber || user.accountNumber;

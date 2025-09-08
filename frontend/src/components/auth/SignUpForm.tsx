@@ -18,6 +18,7 @@ export default function SignUpForm() {
     phone: "",
     email: "",
     password: "",
+    merchant: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,7 +33,8 @@ export default function SignUpForm() {
       !formData.lname ||
       !formData.phone ||
       !formData.email ||
-      !formData.password
+      !formData.password ||
+      !formData.merchant
     ) {
       errorToast("All fields are required!");
       return;
@@ -41,12 +43,22 @@ export default function SignUpForm() {
       errorToast("You must accept the Terms and Conditions.");
       return;
     }
+
+    const pkPhoneRegex = /^(?:\+92|0)3[0-9]{9}$/;
+    if (!pkPhoneRegex.test(formData.phone)) {
+      errorToast(
+        "Please enter a valid phone number (e.g., +923001234567 or 03001234567)."
+      );
+      return;
+    }
+
     const data = {
       firstName: formData.fname,
       lastName: formData.lname,
       email: formData.email,
       password: formData.password,
       phoneNo: formData.phone,
+      merchant: formData.merchant,
     };
     try {
       const res = await apiCaller({
@@ -113,19 +125,35 @@ export default function SignUpForm() {
                   </div>
                 </div>
                 {/* Phone Number */}
-                <div>
-                  <Label>
-                    Mobile Number<span className="text-error-500">*</span>
-                  </Label>
-                  <Input
-                    type="number"
-                    id="phone"
-                    name="phone"
-                    placeholder="Enter your mobile number"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                  />
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <div className="sm:col-span-1">
+                    <Label>
+                      Merchant Name<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      id="merchant"
+                      name="merchant"
+                      placeholder="Enter your merchant name"
+                      value={formData.merchant}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="sm:col-span-1">
+                    <Label>
+                      Mobile Number<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="number"
+                      id="phone"
+                      name="phone"
+                      placeholder="Enter your mobile number"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
                 </div>
                 {/* Email */}
                 <div>

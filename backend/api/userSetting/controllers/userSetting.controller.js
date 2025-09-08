@@ -14,6 +14,7 @@ exports.getUser = async (req, res) => {
       lastName: user?.lastName || "",
       phoneNo: user?.phoneNo || "",
       email: user.email || "",
+      merchant: user.merchant || "",
       role: user.role,
       shipperNumber: user.shipperNumber,
       isVerified: user.isVerified,
@@ -38,6 +39,7 @@ exports.edit = async (req, res) => {
       accountNumber,
       accountName,
       email,
+      merchant
     } = req.body;
 
     // find user by logged-in user's id
@@ -65,6 +67,7 @@ exports.edit = async (req, res) => {
     if (bankName !== undefined) user.bankName = bankName;
     if (accountNumber !== undefined) user.accountNumber = accountNumber;
     if (accountName !== undefined) user.accountName = accountName;
+    if (merchant !== undefined) user.merchant = merchant;
 
     await user.save();
 
@@ -75,6 +78,7 @@ exports.edit = async (req, res) => {
       phoneNo: user?.phoneNo || "",
       email: user.email || "",
       role: user.role,
+      merchant: user.merchant || "",
       shipperNumber: user.shipperNumber,
       isVerified: user.isVerified,
       bankName: user?.bankName || "",

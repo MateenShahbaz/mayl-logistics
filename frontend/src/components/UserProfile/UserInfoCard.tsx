@@ -14,6 +14,7 @@ interface User {
   bankName?: string;
   accountNumber?: number;
   accountName?: string;
+  merchant?: string,
   status: boolean;
   isVerified: boolean;
 }
@@ -52,6 +53,15 @@ export default function UserInfoCard({ user }: Props) {
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user?.lastName}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Merchant Name
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.merchant}
               </p>
             </div>
 

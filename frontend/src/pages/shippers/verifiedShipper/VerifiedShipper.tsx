@@ -12,7 +12,7 @@ import Label from "../../../components/form/Label";
 import Input from "../../../components/form/input/InputField";
 import { EyeCloseIcon, EyeIcon, MoreDotIcon } from "../../../icons";
 import Switch from "../../../components/form/switch/Switch";
-import { successToast } from "../../../core/core-index";
+import { errorToast, successToast } from "../../../core/core-index";
 import { Dropdown } from "../../../components/ui/dropdown/Dropdown";
 import { DropdownItem } from "../../../components/ui/dropdown/DropdownItem";
 import { Link } from "react-router";
@@ -39,6 +39,9 @@ const VerifiedShipper = () => {
     bankName: "",
     accountNumber: "",
     accountName: "",
+    merchant: "",
+    pickup: "",
+    returnAdd: "",
     status: true, // or false
   });
   const [dataSource, setDataSource] = useState<Shipper[]>([]);
@@ -95,6 +98,9 @@ const VerifiedShipper = () => {
       bankName: "",
       accountNumber: "",
       accountName: "",
+      pickup: "",
+      returnAdd: "",
+      merchant: "",
       status: true,
     });
     setEditingId(null);
@@ -112,6 +118,15 @@ const VerifiedShipper = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const pkPhoneRegex = /^(?:\+92|0)3[0-9]{9}$/;
+    if (!pkPhoneRegex.test(formData.phoneNo)) {
+      errorToast(
+        "Please enter a valid phone number (e.g., +923001234567 or 03001234567)."
+      );
+      return;
+    }
+
     const url = editingId ? `/shipper/edit/${editingId}` : "/shipper/add";
     const method = editingId ? "PUT" : "POST";
     try {
@@ -138,6 +153,9 @@ const VerifiedShipper = () => {
           password: "",
           bankName: "",
           accountNumber: "",
+          pickup: "",
+          returnAdd: "",
+          merchant: "",
           accountName: "",
           status: true,
         });
@@ -155,7 +173,10 @@ const VerifiedShipper = () => {
       bankName: record?.bankName,
       accountNumber: record?.accountNumber,
       accountName: record?.accountName,
+      merchant: record?.merchant,
       status: record?.status,
+      pickup: "",
+      returnAdd: "",
     });
     setEditingId(record?._id || null);
     openModal();
@@ -347,7 +368,7 @@ const VerifiedShipper = () => {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
-                      placeholder="Enter your first name"
+                      placeholder="Enter first name"
                       required
                     />
                   </div>
@@ -362,24 +383,75 @@ const VerifiedShipper = () => {
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleChange}
-                      placeholder="Enter your last name"
+                      placeholder="Enter last name"
                       required
                     />
                   </div>
-                  <div className="col-span-2">
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Merchant Name
+                      <span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      name="merchant"
+                      value={formData.merchant}
+                      onChange={handleChange}
+                      placeholder="Enter merchant name"
+                      required
+                    />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
                     <Label>
                       Mobile Number
                       <span className="text-error-500">*</span>
                     </Label>
                     <Input
-                      type="text"
+                      type="number"
                       name="phoneNo"
                       value={formData.phoneNo}
                       onChange={handleChange}
-                      placeholder="Enter your mobile number"
+                      placeholder="Enter mobile number"
                       required
                     />
                   </div>
+
+                  {!editingId && (
+                    <>
+                      <div className="col-span-2 lg:col-span-1">
+                        <Label>
+                          Pickup Address
+                          <span className="text-error-500">*</span>
+                        </Label>
+                        <Input
+                          type="text"
+                          name="pickup"
+                          value={formData.pickup}
+                          onChange={handleChange}
+                          placeholder="Enter pickup address"
+                          required
+                        />
+                      </div>
+
+                      <div className="col-span-2 lg:col-span-1">
+                        <Label>
+                          Return Address
+                          <span className="text-error-500">*</span>
+                        </Label>
+                        <Input
+                          type="text"
+                          name="returnAdd"
+                          value={formData.returnAdd}
+                          onChange={handleChange}
+                          placeholder="Enter return Address"
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
+
                   <div className="col-span-2">
                     <Label>
                       Email
@@ -390,7 +462,7 @@ const VerifiedShipper = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="Enter your email"
+                      placeholder="Enter email"
                       required
                     />
                   </div>
@@ -405,7 +477,7 @@ const VerifiedShipper = () => {
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
-                        placeholder="Enter your password"
+                        placeholder="Enter password"
                         required={!editingId}
                         disabled={!!editingId}
                       />

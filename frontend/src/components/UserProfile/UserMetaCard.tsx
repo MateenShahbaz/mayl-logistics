@@ -5,7 +5,7 @@ import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { useEffect, useState } from "react";
 import { apiCaller } from "../../core/API/ApiServices";
-import { successToast } from "../../core/core-index";
+import { errorToast, successToast } from "../../core/core-index";
 import { useAuth } from "../../context/AuthContext";
 interface User {
   _id: string;
@@ -17,6 +17,7 @@ interface User {
   role: string;
   bankName?: string;
   accountNumber?: number;
+  merchant?: string;
   accountName?: string;
   status: boolean;
   isVerified: boolean;
@@ -58,7 +59,17 @@ export default function UserMetaCard({ user }: Props) {
       accountNumber: formData.accountNumber,
       accountName: formData.accountName,
       email: formData.email,
+      merchant: formData.merchant,
     };
+
+    const pkPhoneRegex = /^(?:\+92|0)3[0-9]{9}$/;
+    if (!pkPhoneRegex.test(formData.phoneNo)) {
+      errorToast(
+        "Please enter a valid phone number (e.g., +923001234567 or 03001234567)."
+      );
+      return;
+    }
+
     const response = await apiCaller({
       method: "PUT",
       url: "/userSetting/edit",
@@ -180,8 +191,21 @@ export default function UserMetaCard({ user }: Props) {
                       </Label>
                       <Input
                         name="phoneNo"
-                        type="text"
+                        type="number"
                         value={formData.phoneNo}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>
+                        Merchant <span className="text-error-500">*</span>
+                      </Label>
+                      <Input
+                        name="merchant"
+                        type="text"
+                        value={formData.merchant}
                         onChange={handleChange}
                         required
                       />
