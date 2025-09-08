@@ -71,6 +71,10 @@ const OrderSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
+      mobile: {
+        type: String,
+        required:true
+      }
     },
     orderDetail: {
       type: String,

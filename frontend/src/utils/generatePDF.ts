@@ -1,8 +1,15 @@
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import QRCode from "qrcode";
 import JsBarcode from "jsbarcode";
 
-// helper: convert image url → base64
+// extend jsPDF type
+declare module "jspdf" {
+  interface jsPDF {
+    lastAutoTable?: { finalY: number };
+  }
+}
+
 const getBase64Image = (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -21,13 +28,13 @@ const getBase64Image = (url: string): Promise<string> => {
 };
 
 export const generatePDF = async (order: any) => {
-  const doc = new jsPDF();
+  const doc = new jsPDF("p", "mm", "a4");
 
   const copies = parseInt(order.airwayBillsCopy, 10) || 1;
   const perPage = 3;
+  const sectionHeight = 90;
   let sectionCount = 0;
 
-  // get logo
   const logoBase64 = await getBase64Image("/images/logo/web-logo.png");
 
   for (let i = 0; i < copies; i++) {
@@ -36,9 +43,11 @@ export const generatePDF = async (order: any) => {
       sectionCount = 0;
     }
 
-    const yOffset = sectionCount * 90 + 10;
+    const yOffset = sectionCount * sectionHeight + 10;
 
-    // barcodes
+    doc.setDrawColor(150);
+    doc.rect(10, yOffset, 190, sectionHeight - 5);
+
     const refCanvas = document.createElement("canvas");
     JsBarcode(refCanvas, order.refNumber || "0000", { format: "CODE128" });
     const refBarcode = refCanvas.toDataURL("image/png");
@@ -47,87 +56,103 @@ export const generatePDF = async (order: any) => {
     JsBarcode(orderCanvas, order.orderNumber || "0000", { format: "CODE128" });
     const orderBarcode = orderCanvas.toDataURL("image/png");
 
-    // qr code
     const qrCodeData = await QRCode.toDataURL(order.orderNumber || "000000");
 
-    // section outer border (lighter gray, 1px)
-    doc.setDrawColor(180, 180, 180);
-    doc.setLineWidth(0.2);
-    doc.rect(10, yOffset, 190, 85);
+    doc.addImage(logoBase64, "PNG", 12, yOffset + 2, 35, 12);
+    doc.addImage(refBarcode, "PNG", 80, yOffset + 2, 40, 12);
+    doc.addImage(orderBarcode, "PNG", 145, yOffset + 2, 40, 12);
 
-    // ---------- TOP ROW (Logo + Barcodes) ----------
-    doc.addImage(logoBase64, "PNG", 12, yOffset + 2, 20, 12);
-    doc.addImage(refBarcode, "PNG", 100, yOffset + 2, 45, 12);
-    doc.addImage(orderBarcode, "PNG", 150, yOffset + 2, 45, 12);
+    autoTable(doc, {
+      startY: yOffset + 18,
+      margin: { left: 12, right: 12 },
+      head: [
+        ["Consignee Information", "Shipment Information", "Order Information"],
+      ],
+      body: [
+        [
+          {
+            content: `Name: ${order.customer.name}\nContact: ${order.customer.contactNumber}\nDelivery: ${order.customer.deliveryAddress}`,
+            styles: { fontStyle: "bold" },
+          },
 
-    // ---------- CONSIGNEE / SHIPMENT / ORDER INFO ----------
-    doc.setFillColor(220, 220, 220);
-    doc.rect(10, yOffset + 18, 190, 6, "F");
+          {
+            content: `Pieces: ${order.items}\nOrder Ref: ${order.refNumber}\nTracking No: ${order.orderNumber}\nOrigin: Lahore\nDestination: Lahore\nReturn City: Lahore`,
+            styles: { fontStyle: "bold" },
+          },
 
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text("Consignee Information", 15, yOffset + 22);
-    doc.text("Shipment Information", 85, yOffset + 22);
-    doc.text("Order Information", 145, yOffset + 22);
+          {
+            content: `Amount: ${
+              order.amount
+            }/-\nDate: ${new Date().toLocaleDateString()}\nOrder Type: ${
+              order.orderType
+            }`,
+            styles: { fontStyle: "bold" },
+          },
+        ],
+      ],
+      styles: { fontSize: 7, cellPadding: 2, valign: "top", lineWidth: 0.2 },
+      headStyles: { fillColor: [220, 220, 220], textColor: 0, lineWidth: 0.2 },
+      bodyStyles: {
+        minCellHeight: 27,
+      },
+      columnStyles: {
+        0: { cellWidth: 63 },
+        1: { cellWidth: 63 },
+        2: { cellWidth: 60 },
+      },
+      didDrawCell: (data) => {
+        if (
+          data.section === "body" &&
+          data.row.index < data.table.body.length - 1
+        ) {
+          const spacing = 2;
+          doc.setDrawColor(255, 255, 255);
+          doc.setLineWidth(spacing);
+          doc.line(
+            data.cell.x,
+            data.cell.y + data.cell.height,
+            data.cell.x + data.cell.width,
+            data.cell.y + data.cell.height
+          );
+        }
+      },
+    });
 
-    doc.setFont("helvetica", "normal");
-    let rowY = yOffset + 28;
+    const tableY = doc.lastAutoTable?.finalY || yOffset + 30;
+    doc.addImage(qrCodeData, "PNG", 167, yOffset + 26, 24, 24);
 
-    // Consignee Info
-    doc.text(`Name: ${order.customer.name}`, 15, rowY);
-    doc.text(`Contact: ${order.customer.contactNumber}`, 15, rowY + 5);
+    autoTable(doc, {
+      startY: tableY + 2,
+      margin: { left: 12, right: 12 },
+      head: [["Shipper Information", "Additional Information"]],
+      body: [
+        [
+          `Name: ${order.merchant}\nPhone Number: ${order.shipperInfo.mobile}\nPickup Address: ${order.shipperInfo.pickupAddress}\nReturn Address: ${order.shipperInfo.returnAddress}`,
 
-    const deliveryText = doc.splitTextToSize(
-      `Delivery: ${order.customer.deliveryAddress}`,
-      70
-    );
-    doc.text(deliveryText, 15, rowY + 10);
-
-    // Shipment Info
-    doc.text(`Pieces: ${order.items}`, 85, rowY);
-    doc.text(`Order Ref: ${order.refNumber}`, 85, rowY + 5);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Tracking No: ${order.orderNumber}`, 85, rowY + 10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Origin: Lahore`, 85, rowY + 15);
-    doc.text(`Destination: Lahore`, 85, rowY + 20);
-
-    // Order Info
-    doc.setFont("helvetica", "bold");
-    doc.text(`Amount: ${order.amount}/-`, 145, rowY);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 145, rowY + 5);
-    doc.text(`Order Type: ${order.orderType}`, 145, rowY + 10);
-
-    // ---------- SHIPPER INFO ----------
-    // 🔽 move it more below (was +50, now +60 for extra spacing)
-    const shipperY = yOffset + 60;
-
-    doc.setFillColor(220, 220, 220);
-    doc.rect(10, shipperY - 5, 190, 6, "F");
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Shipper Information", 15, shipperY - 1);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(`Name: ${order.merchant}`, 15, shipperY + 5);
-
-    const pickupText = doc.splitTextToSize(
-      `Pickup: ${order.shipperInfo.pickupAddress}`,
-      140
-    );
-    doc.text(pickupText, 15, shipperY + 10);
-
-    const pickupHeight = pickupText.length * 3.5; // tighter line gap
-    const returnY = shipperY + 10 + pickupHeight + 3;
-
-    const returnText = doc.splitTextToSize(
-      `Return: ${order.shipperInfo.returnAddress}`,
-      140
-    );
-    doc.text(returnText, 15, returnY);
-
-    // ---------- QR CODE BELOW ----------
-    doc.addImage(qrCodeData, "PNG", 175, shipperY + 3, 18, 18);
+          `Order Details: ${order.orderDetail || "N/A"}\nRemarks: ${
+            order.notes || "N/A"
+          }`,
+        ],
+      ],
+      styles: { fontSize: 7, cellPadding: 2, valign: "top", lineWidth: 0.2 },
+      headStyles: {
+        fillColor: [220, 220, 220],
+        textColor: 0,
+        lineWidth: 0.2,
+        halign: "center",
+        fontStyle: "bold",
+      },
+      bodyStyles: {
+        minCellHeight: 22,
+        textColor: 0,
+        lineWidth: 0.2,
+      },
+      columnStyles: {
+        0: { cellWidth: 93 },
+        1: { cellWidth: 93 },
+      },
+      pageBreak: "avoid",
+    });
 
     sectionCount++;
   }
