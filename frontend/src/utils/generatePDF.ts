@@ -59,7 +59,7 @@ export const generatePDF = async (order: any) => {
     const qrCodeData = await QRCode.toDataURL(order.orderNumber || "000000");
 
     doc.addImage(logoBase64, "PNG", 12, yOffset + 2, 35, 12);
-    doc.addImage(refBarcode, "PNG", 80, yOffset + 2, 40, 12);
+    doc.addImage(refBarcode, "PNG", 73, yOffset + 2, 40, 12);
     doc.addImage(orderBarcode, "PNG", 145, yOffset + 2, 40, 12);
 
     autoTable(doc, {
