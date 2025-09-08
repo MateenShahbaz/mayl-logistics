@@ -10,11 +10,12 @@ import { useEffect, useState } from "react";
 import { apiCaller } from "../../core/API/ApiServices";
 import { Table } from "antd";
 import { Link } from "react-router";
-import { successToast } from "../../core/core-index";
+import { errorToast, successToast } from "../../core/core-index";
 import Badge from "../../components/ui/badge/Badge";
 import { MoreDotIcon } from "../../icons";
 import { Dropdown } from "../../components/ui/dropdown/Dropdown";
 import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
+import { generatePDF } from "../../utils/generatePDF";
 
 interface Order {
   _id: string;
@@ -59,7 +60,7 @@ const Order = () => {
   const [defaultPickup, setDefaultPickup] = useState<any>(null);
   const [defaultReturn, setDefaultReturn] = useState<any>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-
+  const [printMode, setPrintMode] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     orderType: "",
     refNumber: "",
@@ -189,7 +190,6 @@ const Order = () => {
       const defaultReturnOption = response.data.returnaddress.find(
         (opt: any) => opt.default === true
       );
-
       if (defaultPickupOption) setDefaultPickup(defaultPickupOption.address);
       if (defaultReturnOption) setDefaultReturn(defaultReturnOption.address);
     }
@@ -207,6 +207,15 @@ const Order = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const pkPhoneRegex = /^(?:\+92|0)3[0-9]{9}$/;
+    if (!pkPhoneRegex.test(formData.customer.contactNumber)) {
+      errorToast(
+        "Please enter a valid phone number (e.g., +923001234567 or 03001234567)."
+      );
+      return;
+    }
+    
     const data = {
       orderType: formData.orderType,
       refNumber: formData.refNumber,
@@ -241,6 +250,9 @@ const Order = () => {
       successToast(
         editingId ? "Order updated successfully" : "Order added successfully"
       );
+      if (printMode) {
+        generatePDF(response.data);
+      }
       closeModal();
       setEditingId(null);
       setFormData({
@@ -666,10 +678,19 @@ const Order = () => {
               <Button size="sm" variant="outline" onClick={closeHandle}>
                 Close
               </Button>
-              <Button size="sm" type="submit">
+              <Button
+                size="sm"
+                type="submit"
+                onClick={() => setPrintMode(false)}
+              >
                 Save
               </Button>
-              <Button size="sm" variant="ghost" type="submit">
+              <Button
+                size="sm"
+                variant="ghost"
+                type="submit"
+                onClick={() => setPrintMode(true)}
+              >
                 Save & Print
               </Button>
             </div>

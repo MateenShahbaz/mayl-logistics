@@ -32,11 +32,12 @@ exports.add = async (req, res) => {
     const newOrder = await orderModel.create({
       ...req.body,
       orderNumber,
+      merchant: req.user?.merchant,
       status: "Unbooked",
       userId: id,
     });
 
-    response.success_message({ message: "Order added successfully" }, res);
+    response.success_message(newOrder, res);
   } catch (error) {
     console.log(error.message);
     return response.error_message(error.message, res);
@@ -86,7 +87,6 @@ exports.view = async (req, res) => {
 exports.edit = async (req, res) => {
   try {
     const { id } = req.params;
-
     if (
       !req.body.orderType ||
       !req.body.shipperInfo?.pickupAddress ||
@@ -108,7 +108,7 @@ exports.edit = async (req, res) => {
 
     await order.save();
 
-    response.success_message({ message: "Order updated successfully" }, res);
+    response.success_message(order , res);
   } catch (error) {
     console.log(error.message);
     return response.error_message(error.message, res);

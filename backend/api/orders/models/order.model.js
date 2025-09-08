@@ -11,6 +11,10 @@ const OrderSchema = new mongoose.Schema(
       required: true,
       enum: ["normal", "reverse", "replacement"],
     },
+    merchant: {
+      type: String,
+      required: false,
+    },
     refNumber: {
       type: String,
       required: true,
@@ -38,7 +42,7 @@ const OrderSchema = new mongoose.Schema(
         required: true,
       },
       contactNumber: {
-        type: Number,
+        type: String,
         required: true,
       },
       deliverCity: {
@@ -79,7 +83,7 @@ const OrderSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ["Unbooked"]
+      enum: ["Unbooked"],
     },
     userId: {
       type: mongoose.Schema.ObjectId,
