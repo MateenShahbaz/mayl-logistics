@@ -148,8 +148,9 @@ const Order = () => {
   };
   const options = [
     { value: "normal", label: "Normal" },
-    { value: "reverse", label: "Reverse" },
+    { value: "reversed", label: "Reversed" },
     { value: "replacement", label: "Replacement" },
+    { value: "overland", label: "Overland" },
   ];
   const { isOpen, openModal, closeModal } = useModal();
 

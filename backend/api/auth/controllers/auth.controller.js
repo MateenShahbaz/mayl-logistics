@@ -109,6 +109,7 @@ exports.login = async (req, res) => {
         role: user?.role,
         shipperNumber: user?.shipperNumber,
         merchant: user?.merchant,
+        phoneNo: user?.phoneNo
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }

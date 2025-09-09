@@ -35,7 +35,7 @@ export const generatePDF = async (order: any) => {
   const sectionHeight = 90;
   let sectionCount = 0;
 
-  const logoBase64 = await getBase64Image("/images/logo/web-logo.png");
+  const logoBase64 = await getBase64Image("/images/logo/dark-logo.png");
 
   for (let i = 0; i < copies; i++) {
     if (sectionCount === perPage) {
@@ -58,7 +58,7 @@ export const generatePDF = async (order: any) => {
 
     const qrCodeData = await QRCode.toDataURL(order.orderNumber || "000000");
 
-    doc.addImage(logoBase64, "PNG", 12, yOffset + 2, 35, 12);
+    doc.addImage(logoBase64, "PNG", 12, yOffset + 2, 35, 15);
     doc.addImage(refBarcode, "PNG", 73, yOffset + 2, 40, 12);
     doc.addImage(orderBarcode, "PNG", 145, yOffset + 2, 40, 12);
 
@@ -81,19 +81,23 @@ export const generatePDF = async (order: any) => {
           },
 
           {
-            content: `Amount: ${
-              order.amount
-            }/-\nDate: ${new Date().toLocaleDateString()}\nOrder Type: ${
+            content: `Date: ${new Date().toLocaleDateString()}\nOrder Type: ${
               order.orderType
-            }`,
+            }\nAmount: ${order.amount}/-`,
             styles: { fontStyle: "bold" },
           },
         ],
       ],
       styles: { fontSize: 7, cellPadding: 2, valign: "top", lineWidth: 0.2 },
-      headStyles: { fillColor: [220, 220, 220], textColor: 0, lineWidth: 0.2 },
+      headStyles: {
+        fillColor: [220, 220, 220],
+        textColor: 0,
+        lineWidth: 0.2,
+        halign: "center",
+      },
       bodyStyles: {
         minCellHeight: 27,
+        textColor: 0,
       },
       columnStyles: {
         0: { cellWidth: 63 },
@@ -129,8 +133,8 @@ export const generatePDF = async (order: any) => {
         [
           `Name: ${order.merchant}\nPhone Number: ${order.shipperInfo.mobile}\nPickup Address: ${order.shipperInfo.pickupAddress}\nReturn Address: ${order.shipperInfo.returnAddress}`,
 
-          `Order Details: ${order.orderDetail || "N/A"}\nRemarks: ${
-            order.notes || "N/A"
+          `Remarks: ${order.notes || "N/A"}\n\nOrder Details: ${
+            order.orderDetail || "N/A"
           }`,
         ],
       ],

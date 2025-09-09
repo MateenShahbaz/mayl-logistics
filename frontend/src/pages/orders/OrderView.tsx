@@ -42,7 +42,7 @@ const OrderView = () => {
                     Merchant Name
                   </p>
                   <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    {/* {user?.firstName} */} N/A
+                    {orderData?.merchant}
                   </p>
                 </div>
 

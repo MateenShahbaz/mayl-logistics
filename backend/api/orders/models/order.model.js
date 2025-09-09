@@ -9,7 +9,7 @@ const OrderSchema = new mongoose.Schema(
     orderType: {
       type: String,
       required: true,
-      enum: ["normal", "reverse", "replacement"],
+      enum: ["normal", "reversed", "replacement", "overland"],
     },
     merchant: {
       type: String,
