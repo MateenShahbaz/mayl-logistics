@@ -163,3 +163,128 @@ export const generatePDF = async (order: any) => {
 
   doc.save("order.pdf");
 };
+
+
+export const generatePDFForOrders = async (orders: any[]) => {
+  const doc = new jsPDF("p", "mm", "a4");
+  const perPage = 3; // 3 airway bills per page
+  const sectionHeight = 90;
+
+  const logoBase64 = await getBase64Image("/images/logo/dark-logo.png");
+  let sectionCount = 0;
+
+  for (const order of orders) {
+    const copies = parseInt(order.airwayBillsCopy, 10) || 1;
+
+    for (let i = 0; i < copies; i++) {
+      if (sectionCount === perPage) {
+        doc.addPage();
+        sectionCount = 0;
+      }
+
+      const yOffset = sectionCount * sectionHeight + 10;
+
+      // Draw section border
+      doc.setDrawColor(150);
+      doc.rect(10, yOffset, 190, sectionHeight - 5);
+
+      // Generate barcodes
+      const refCanvas = document.createElement("canvas");
+      JsBarcode(refCanvas, order.refNumber || "0000", { format: "CODE128" });
+      const refBarcode = refCanvas.toDataURL("image/png");
+
+      const orderCanvas = document.createElement("canvas");
+      JsBarcode(orderCanvas, order.orderNumber || "0000", {
+        format: "CODE128",
+      });
+      const orderBarcode = orderCanvas.toDataURL("image/png");
+
+      const qrCodeData = await QRCode.toDataURL(order.orderNumber || "000000");
+
+      // Header images
+      doc.addImage(logoBase64, "PNG", 12, yOffset + 2, 35, 15);
+      doc.addImage(refBarcode, "PNG", 73, yOffset + 2, 40, 12);
+      doc.addImage(orderBarcode, "PNG", 145, yOffset + 2, 40, 12);
+
+      // Table 1
+      autoTable(doc, {
+        startY: yOffset + 18,
+        margin: { left: 12, right: 12 },
+        head: [
+          ["Consignee Information", "Shipment Information", "Order Information"],
+        ],
+        body: [
+          [
+            {
+              content: `Name: ${order.customer.name}\nContact: ${order.customer.contactNumber}\nDelivery: ${order.customer.deliveryAddress}`,
+              styles: { fontStyle: "bold" },
+            },
+            {
+              content: `Pieces: ${order.items}\nOrder Ref: ${order.refNumber}\nTracking No: ${order.orderNumber}\nOrigin: Lahore\nDestination: Lahore\nReturn City: Lahore`,
+              styles: { fontStyle: "bold" },
+            },
+            {
+              content: `Date: ${new Date().toLocaleDateString()}\nOrder Type: ${order.orderType}\nAmount: ${order.amount}/-`,
+              styles: { fontStyle: "bold" },
+            },
+          ],
+        ],
+        styles: { fontSize: 7, cellPadding: 2, valign: "top", lineWidth: 0.2 },
+        headStyles: {
+          fillColor: [220, 220, 220],
+          textColor: 0,
+          lineWidth: 0.2,
+          halign: "center",
+        },
+        bodyStyles: {
+          minCellHeight: 27,
+          textColor: 0,
+        },
+        columnStyles: {
+          0: { cellWidth: 63 },
+          1: { cellWidth: 63 },
+          2: { cellWidth: 60 },
+        },
+      });
+
+      const tableY = doc.lastAutoTable?.finalY || yOffset + 30;
+      doc.addImage(qrCodeData, "PNG", 167, yOffset + 26, 24, 24);
+
+      // Table 2
+      autoTable(doc, {
+        startY: tableY + 2,
+        margin: { left: 12, right: 12 },
+        head: [["Shipper Information", "Additional Information"]],
+        body: [
+          [
+            `Name: ${order.merchant}\nPhone Number: ${order.shipperInfo.mobile}\nPickup Address: ${order.shipperInfo.pickupAddress}\nReturn Address: ${order.shipperInfo.returnAddress}`,
+            `Remarks: ${order.notes || "N/A"}\n\nOrder Details: ${
+              order.orderDetail || "N/A"
+            }`,
+          ],
+        ],
+        styles: { fontSize: 7, cellPadding: 2, valign: "top", lineWidth: 0.2 },
+        headStyles: {
+          fillColor: [220, 220, 220],
+          textColor: 0,
+          lineWidth: 0.2,
+          halign: "center",
+          fontStyle: "bold",
+        },
+        bodyStyles: {
+          minCellHeight: 22,
+          textColor: 0,
+        },
+        columnStyles: {
+          0: { cellWidth: 93 },
+          1: { cellWidth: 93 },
+        },
+        pageBreak: "avoid",
+      });
+
+      sectionCount++;
+    }
+  }
+
+  doc.save("orders.pdf");
+};

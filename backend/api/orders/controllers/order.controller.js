@@ -228,10 +228,7 @@ exports.excelUpload = async (req, res) => {
     // Insert into DB
     const createdOrders = await orderModel.insertMany(ordersToInsert);
 
-    return response.success_message(
-      { count: createdOrders.length, orders: createdOrders },
-      res
-    );
+    return response.success_message(createdOrders, res);
   } catch (error) {
     console.log("Excel Upload Error:", error.message);
     return response.error_message(error.message, res);

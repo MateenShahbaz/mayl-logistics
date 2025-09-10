@@ -8,6 +8,7 @@ import FileInput from "../../components/form/input/FileInput";
 import Button from "../../components/ui/button/Button";
 import { errorToast, infoToast, successToast } from "../../core/core-index";
 import { apiCaller } from "../../core/API/ApiServices";
+import { generatePDFForOrders } from "../../utils/generatePDF";
 
 // Define row type
 interface OrderRow {
@@ -206,8 +207,47 @@ const BulkBooking: React.FC = () => {
       url: "/order/excel",
       data: selectedOrders,
     });
-    if(response.code === 200){
-      successToast("Orders Added")
+    if (response.code === 200) {
+      successToast("Orders Added");
+    }
+  };
+
+  const handleGenerateOrdersAndPrint = async () => {
+    if (selectedRowKeys.length === 0) {
+      infoToast("Please select at least one order.");
+      return;
+    }
+
+    const selectedOrders = orders.filter((o) =>
+      selectedRowKeys.includes(o.key)
+    );
+    const invalid = selectedOrders.filter((o) => o.status?.startsWith("❌"));
+
+    if (invalid.length > 0) {
+      errorToast(`${invalid.length} invalid order(s) found.`);
+      return;
+    }
+
+    const response = await apiCaller({
+      method: "POST",
+      url: "/order/excel",
+      data: selectedOrders,
+    });
+
+    if (response.code === 200) {
+      successToast("Orders Added");
+      await generatePDFForOrders(response.data);
+      setOrders([]);
+      setSelectedRowKeys([]);
+      setFile(null);
+
+      if (fileInputRef.current) {
+        try {
+          fileInputRef.current.value = "";
+        } catch (err) {
+          console.warn("Could not clear input.value directly", err);
+        }
+      }
     }
   };
 
@@ -276,6 +316,10 @@ const BulkBooking: React.FC = () => {
               </Button>
               <Button variant="primary" onClick={handleGenerateOrders}>
                 Generate Orders
+              </Button>
+
+              <Button variant="primary" onClick={handleGenerateOrdersAndPrint}>
+                Generate Orders and Print
               </Button>
             </div>
           </div>
