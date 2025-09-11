@@ -8,5 +8,6 @@ router.get("/list", orderController.list);
 router.get("/view/:id", orderController.view);
 router.get("/tracking/:tackingNo", orderController.trackOrder);
 router.put("/edit/:id", orderController.edit);
+router.get("/orderlogs", orderController.orderLogs);
 
 module.exports = router;

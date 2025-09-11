@@ -195,6 +195,26 @@ const Order = () => {
       );
       if (defaultPickupOption) setDefaultPickup(defaultPickupOption.address);
       if (defaultReturnOption) setDefaultReturn(defaultReturnOption.address);
+      setFormData({
+        orderType: "",
+        refNumber: "",
+        amount: 0,
+        airwayBillsCopy: 0,
+        items: 0,
+        weight: 0,
+        customer: {
+          name: "",
+          contactNumber: "",
+          deliverCity: "Lahore",
+          deliveryAddress: "",
+        },
+        shipperInfo: {
+          pickupAddress: defaultPickupOption.address,
+          returnAddress: defaultReturnOption.address,
+        },
+        orderDetail: "",
+        notes: "",
+      });
     }
   };
 
@@ -379,7 +399,7 @@ const Order = () => {
                   View
                 </Link>
               </DropdownItem>
-              {record?.status === "Unbooked" && (
+              {record?.status === "unbooked" && (
                 <DropdownItem
                   onItemClick={() => {
                     editHandle(record);
@@ -573,7 +593,7 @@ const Order = () => {
                       Contact Number <span className="text-error-500">*</span>
                     </Label>
                     <Input
-                      type="number"
+                      type="text"
                       value={formData.customer.contactNumber}
                       onChange={(e) =>
                         handleNestedChange(

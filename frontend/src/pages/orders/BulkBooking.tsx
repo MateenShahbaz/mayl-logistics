@@ -209,6 +209,17 @@ const BulkBooking: React.FC = () => {
     });
     if (response.code === 200) {
       successToast("Orders Added");
+      setOrders([]);
+      setSelectedRowKeys([]);
+      setFile(null);
+
+      if (fileInputRef.current) {
+        try {
+          fileInputRef.current.value = "";
+        } catch (err) {
+          console.warn("Could not clear input.value directly", err);
+        }
+      }
     }
   };
 

@@ -2,10 +2,31 @@ const orderModel = require("../models/order.model");
 const response = require("../../../response");
 const addressModel = require("../../address/models/address.model");
 const userModel = require("../../auth/models/auth.model");
+const mongoose = require("mongoose");
 exports.add = async (req, res) => {
   try {
     const { shipperNumber, id } = req.user;
+    const defaultPickup = await addressModel.findOne({
+      default: true,
+      userId: id,
+      type: "pickup",
+    });
+    if (!defaultPickup) {
+      return response.data_error_message({
+        message: "Kindly make sure you have default pickup address",
+      });
+    }
 
+    const defaultReturn = await addressModel.findOne({
+      default: true,
+      userId: id,
+      type: "return",
+    });
+    if (!defaultReturn) {
+      return response.data_error_message({
+        message: "Kindly make sure you have default return address",
+      });
+    }
     if (
       !req.body.orderType ||
       !req.body.shipperInfo.pickupAddress ||
@@ -18,10 +39,11 @@ exports.add = async (req, res) => {
     }
     const lastOrder = await orderModel
       .findOne({ userId: id })
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 }) // 👈 double sort for accuracy
       .select("orderNumber");
 
     let sequence = 1;
+
     if (lastOrder && lastOrder.orderNumber) {
       const lastSeq = parseInt(lastOrder.orderNumber.slice(-7), 10);
       sequence = lastSeq + 1;
@@ -34,7 +56,7 @@ exports.add = async (req, res) => {
       ...req.body,
       orderNumber,
       merchant: req.user?.merchant,
-      status: "Unbooked",
+      status: "unbooked",
       userId: id,
     });
 
@@ -176,7 +198,7 @@ exports.excelUpload = async (req, res) => {
     // Get last sequence
     const lastOrder = await orderModel
       .findOne({ userId: id })
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 }) // 👈 double sort for accuracy
       .select("orderNumber");
 
     let sequence = 1;
@@ -218,7 +240,7 @@ exports.excelUpload = async (req, res) => {
         },
         orderDetail: row["Order Detail"] || "",
         notes: row["Notes"] || "",
-        status: "Unbooked",
+        status: "unbooked",
         userId: id,
       };
 
@@ -231,6 +253,101 @@ exports.excelUpload = async (req, res) => {
     return response.success_message(createdOrders, res);
   } catch (error) {
     console.log("Excel Upload Error:", error.message);
+    return response.error_message(error.message, res);
+  }
+};
+
+exports.orderLogs = async (req, res) => {
+  try {
+    const {
+      limit = 10,
+      skip = 0,
+      status,
+      startDate,
+      endDate,
+      search,
+      searchType,
+    } = req.query;
+
+    let query = { userId: req.user.id };
+
+    if (status && status !== "all") {
+      query.status = status;
+    }
+
+    if (startDate && endDate) {
+      query.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    } else if (startDate) {
+      query.createdAt = { $gte: new Date(startDate) };
+    } else if (endDate) {
+      query.createdAt = { $lte: new Date(endDate) };
+    }
+
+    if (search && searchType) {
+      switch (searchType) {
+        case "order ref":
+          query.refNumber = { $regex: search, $options: "i" };
+          break;
+        case "tracking":
+          query.orderNumber = { $regex: search, $options: "i" };
+          break;
+        case "name":
+          query.customer.name = { $regex: search, $options: "i" };
+          break;
+        case "phone":
+          query.customer.contactNumber = { $regex: search, $options: "i" };
+          break;
+      }
+    }
+
+    const orders = await orderModel
+      .find(query)
+      .select(
+        "orderNumber orderType refNumber amount items weight status createdAt customerName customerPhone"
+      )
+      .limit(Number(limit))
+      .skip(Number(skip));
+
+    const countsAgg = await orderModel.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(req.user.id), // 👈 important
+        },
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const orderCount = await orderModel.countDocuments({ userId: req.user.id });
+
+    const counts = {
+      all: orderCount,
+      booked: 0,
+      unbooked: 0,
+      inTransit: 0,
+      delivered: 0,
+      returned: 0,
+      cancelled: 0,
+      expired: 0,
+      lost: 0,
+      stolen: 0,
+      damage: 0,
+    };
+
+    countsAgg.forEach((c) => {
+      counts[c._id] = c.count;
+    });
+    const data = {
+      orders,
+      counts,
+    };
+    response.success_message(data, res, orderCount);
+  } catch (error) {
+    console.log(error.message);
     return response.error_message(error.message, res);
   }
 };

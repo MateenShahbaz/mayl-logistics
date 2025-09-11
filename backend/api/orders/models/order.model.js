@@ -73,8 +73,8 @@ const OrderSchema = new mongoose.Schema(
       },
       mobile: {
         type: String,
-        required:true
-      }
+        required: true,
+      },
     },
     orderDetail: {
       type: String,
@@ -87,7 +87,18 @@ const OrderSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ["Unbooked"],
+      enum: [
+        "booked",
+        "unbooked",
+        "inTransit",
+        "delivered",
+        "returned",
+        "cancelled",
+        "expired",
+        "lost",
+        "stolen",
+        "damage",
+      ],
     },
     userId: {
       type: mongoose.Schema.ObjectId,
