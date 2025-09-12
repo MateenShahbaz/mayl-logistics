@@ -78,7 +78,14 @@ type FormData = {
   notes: string;
   [key: string]: any; // 👈 allows indexing with string
 };
-
+type BadgeColor =
+  | "primary"
+  | "success"
+  | "error"
+  | "warning"
+  | "info"
+  | "light"
+  | "dark";
 const searchOptions = ["ORDER Ref #", "TRACKING #", "NAME #", "PHONE #"];
 export default function OrderLog() {
   const [dataSource, setDataSource] = useState<Order[]>([]);
@@ -99,6 +106,7 @@ export default function OrderLog() {
   const [defaultPickup, setDefaultPickup] = useState<any>(null);
   const [defaultReturn, setDefaultReturn] = useState<any>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [cancelingId, setCancelingId] = useState<string | null>(null);
   const [printMode, setPrintMode] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     orderType: "",
@@ -120,7 +128,9 @@ export default function OrderLog() {
     orderDetail: "",
     notes: "",
   });
+
   const { isOpen, openModal, closeModal } = useModal();
+  const [isOpenCancel, setIsOpeCancel] = useState(false);
   function toggleDropdown(recordId: string) {
     setOpenDropdownId(openDropdownId === recordId ? null : recordId);
   }
@@ -235,10 +245,24 @@ export default function OrderLog() {
   const fetchDetails = async (currentpage = 1, currentpagesize = 10) => {
     let skipSize;
     skipSize = currentpage == 1 ? 0 : (currentpage - 1) * currentpagesize;
+    const params: any = {
+      limit: currentpagesize,
+      skip: skipSize,
+    };
+
+    if (activeTab && activeTab !== "all") params.status = activeTab;
+    if (status && status !== "all") params.status = status;
+    if (searchValue) {
+      params.search = searchValue;
+      params.searchType = searchType.toLowerCase().replace(/\s+#/g, "");
+    }
+    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
+    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
 
     const response = await apiCaller({
       method: "GET",
-      url: `/order/orderlogs?limit=${currentpagesize}&skip=${skipSize}`,
+      url: `/order/orderlogs`,
+      params,
     });
     if (response.code === 200) {
       setDataSource(response.data.orders);
@@ -416,6 +440,39 @@ export default function OrderLog() {
     }
   };
 
+  const handleCancelation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cancelingId) return;
+
+    try {
+      const response = await apiCaller({
+        method: "PUT",
+        url: `/order/cancel/${cancelingId}`,
+      });
+
+      if (response.code === 200) {
+        successToast("Order canceled successfully ✅");
+        setCancelingId(null);
+        setIsOpeCancel(false);
+        fetchDetails();
+      }
+    } catch (error) {
+      console.error("Error while canceling order:", error);
+    }
+  };
+  const statusColorMap: Record<string, BadgeColor> = {
+    booked: "primary",
+    unbooked: "warning",
+    inTransit: "info",
+    delivered: "success",
+    returned: "dark",
+    cancelled: "error",
+    expired: "error",
+    lost: "error",
+    stolen: "error",
+    damage: "error",
+  };
+
   const columns = [
     {
       title: "Order Number",
@@ -448,11 +505,14 @@ export default function OrderLog() {
     {
       title: "Status",
       key: "status",
-      render: (record: Order) => (
-        <Badge color="success" size="sm">
-          {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-        </Badge>
-      ),
+      render: (record: Order) => {
+        const badgeColor = statusColorMap[record.status] || "light"; // fallback
+        return (
+          <Badge color={badgeColor} size="sm">
+            {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+          </Badge>
+        );
+      },
     },
     {
       title: "Action",
@@ -483,15 +543,28 @@ export default function OrderLog() {
                 </Link>
               </DropdownItem>
               {record?.status === "unbooked" && (
-                <DropdownItem
-                  onItemClick={() => {
-                    editHandle(record);
-                    closeDropdown();
-                  }}
-                  className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-                >
-                  Edit
-                </DropdownItem>
+                <>
+                  <DropdownItem
+                    onItemClick={() => {
+                      editHandle(record);
+                      closeDropdown();
+                    }}
+                    className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                  >
+                    Edit
+                  </DropdownItem>
+
+                  <DropdownItem
+                    onItemClick={() => {
+                      setIsOpeCancel(true);
+                      setCancelingId(record._id);
+                      closeDropdown();
+                    }}
+                    className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                  >
+                    Cancel order
+                  </DropdownItem>
+                </>
               )}
             </Dropdown>
           </div>
@@ -975,6 +1048,38 @@ export default function OrderLog() {
           </form>
         </div>
       </Modal>
+
+      {isOpenCancel && (
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50">
+          {/* Modal Content */}
+          <div className="relative w-full max-w-[500px] rounded-3xl bg-white p-6 dark:bg-gray-900">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              Confirmation
+            </h4>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">
+              Are you sure you want to cancel this Order?
+            </p>
+
+            <form onSubmit={handleCancelation} className="flex flex-col">
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsOpeCancel(false)}
+                  className="rounded-lg border px-4 py-2 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

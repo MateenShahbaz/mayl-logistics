@@ -1,23 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Tab from "../../components/ui/button/Tab";
 import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
-import { DatePicker } from "antd";
+import { DatePicker, Table } from "antd";
 import Button from "../../components/ui/button/Button";
+import { Link } from "react-router";
+import Badge from "../../components/ui/badge/Badge";
+import { apiCaller } from "../../core/API/ApiServices";
+import { errorToast } from "../../core/core-index";
+import { generatePDFForOrders } from "../../utils/generatePDF";
 
-const tabs = [
-  { label: "All", count: 8 },
-  { label: "Booked", count: 0 },
-  { label: "Unbooked", count: 0 },
-  { label: "In Transit", count: 0 },
-];
 const options = [
   { value: "all", label: "All" },
   { value: "booked", label: "Booked" },
   { value: "unbooked", label: "Unbooked" },
-  { value: "in-transit", label: "In Transit" },
+  { value: "intransit", label: "In Transit" },
   { value: "delivered", label: "Delivered" },
   { value: "returned", label: "Returned" },
   { value: "cancelled", label: "Cancelled" },
@@ -26,15 +25,182 @@ const options = [
   { value: "stolen", label: "Stolen" },
   { value: "damage", label: "Damage" },
 ];
-const searchOptions = ["ORDER #", "TRACKING #"];
+
+interface Order {
+  _id: string;
+  orderNumber: string;
+  orderType: string;
+  refNumber: string;
+  amount: number;
+  items: number;
+  weight: number;
+  status: string;
+}
+
+type BadgeColor =
+  | "primary"
+  | "success"
+  | "error"
+  | "warning"
+  | "info"
+  | "light"
+  | "dark";
+const searchOptions = ["ORDER Ref #", "TRACKING #"];
 export default function AirwayBills() {
-  const [activeTab, setActiveTab] = useState("All");
-  const [searchType, setSearchType] = useState("ORDER #");
-  const [selectedOption, setSelectedOption] = useState<string>("");
-  const handleSelectChange = (value: string) => {
-    setSelectedOption(value);
-    console.log(selectedOption);
+  const [dataSource, setDataSource] = useState<Order[]>([]);
+  const [totalCounts, settotalCounts] = useState(0);
+  const [activeTab, setActiveTab] = useState("all");
+  const [tabsCount, setTabsCount] = useState<any>({});
+  const [searchType, setSearchType] = useState("ORDER Ref #");
+  const [searchValue, setSearchValue] = useState("");
+  const [status, setStatus] = useState("");
+  const [startDate, setStartDate] = useState<any>(null);
+  const [endDate, setEndDate] = useState<any>(null);
+  const [, setPage] = useState(1);
+  const [, setPagesize] = useState(10);
+
+  const handleSearch = async (currentpage = 1, currentpagesize = 10) => {
+    let skipSize = currentpage === 1 ? 0 : (currentpage - 1) * currentpagesize;
+
+    const params: any = {
+      limit: currentpagesize,
+      skip: skipSize,
+    };
+
+    if (activeTab && activeTab !== "all") params.status = activeTab;
+    if (status && status !== "all") params.status = status;
+    if (searchValue) {
+      params.search = searchValue;
+      params.searchType = searchType.toLowerCase().replace(/\s+#/g, "");
+    }
+    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
+    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
+
+    const response = await apiCaller({
+      method: "GET",
+      url: `/order/airwayBills`,
+      params,
+    });
+    if (response.code === 200) {
+      setDataSource(response.data.orders);
+      settotalCounts(response.totalRecords);
+      setTabsCount(response.data.counts);
+    }
   };
+
+  const handleClear = () => {
+    setSearchValue("");
+    setStatus("");
+    setStartDate(null);
+    setEndDate(null);
+    setSearchType("ORDER Ref #");
+    setActiveTab("all");
+    fetchDetails();
+  };
+  useEffect(() => {
+    handleSearch(1, 10);
+  }, [activeTab]);
+
+  const fetchDetails = async (currentpage = 1, currentpagesize = 10) => {
+    let skipSize;
+    skipSize = currentpage == 1 ? 0 : (currentpage - 1) * currentpagesize;
+    const params: any = {
+      limit: currentpagesize,
+      skip: skipSize,
+    };
+
+    if (activeTab && activeTab !== "all") params.status = activeTab;
+    if (status && status !== "all") params.status = status;
+    if (searchValue) {
+      params.search = searchValue;
+      params.searchType = searchType.toLowerCase().replace(/\s+#/g, "");
+    }
+    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
+    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
+
+    const response = await apiCaller({
+      method: "GET",
+      url: `/order/airwayBills`,
+      params,
+    });
+    if (response.code === 200) {
+      setDataSource(response.data.orders);
+      settotalCounts(response.totalRecords);
+      setTabsCount(response.data.counts);
+    }
+  };
+
+  const handlePagination = async (page: number, pageSize: number) => {
+    setPage(page);
+    setPagesize(pageSize);
+    fetchDetails(page, pageSize);
+  };
+
+  useEffect(() => {
+    fetchDetails();
+  }, []);
+
+  const statusColorMap: Record<string, BadgeColor> = {
+    booked: "primary",
+    unbooked: "warning",
+    inTransit: "info",
+    delivered: "success",
+    returned: "dark",
+    cancelled: "error",
+    expired: "error",
+    lost: "error",
+    stolen: "error",
+    damage: "error",
+  };
+
+  const generateAirwayBills = async () => {
+    if (dataSource.length === 0) {
+      errorToast("No orders");
+    }
+    await generatePDFForOrders(dataSource);
+  };
+  const columns = [
+    {
+      title: "Order Number",
+      dataIndex: "orderNumber",
+      key: "orderNumber",
+      render: (text: string, record: any) => {
+        return <Link to={`/order-view/${record._id}`}>#{text}</Link>;
+      },
+    },
+    {
+      title: "Type",
+      dataIndex: "orderType",
+      key: "orderType",
+    },
+    {
+      title: "Reference",
+      dataIndex: "refNumber",
+      key: "refNumber",
+    },
+    {
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+    },
+    {
+      title: "Items",
+      dataIndex: "items",
+      key: "items",
+    },
+    {
+      title: "Status",
+      key: "status",
+      render: (record: Order) => {
+        const badgeColor = statusColorMap[record.status] || "light"; // fallback
+        return (
+          <Badge color={badgeColor} size="sm">
+            {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+          </Badge>
+        );
+      },
+    },
+  ];
   return (
     <>
       <PageMeta
@@ -52,38 +218,9 @@ export default function AirwayBills() {
               Filter Orders
             </h3>
             <div className="flex gap-2">
-              <button className="flex bg-gray-400 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="2.5"
-                  stroke="currentColor"
-                  className="size-4"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-                  />
-                </svg>
-              </button>
-              <button className="flex bg-gray-400 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="2.5"
-                  stroke="currentColor"
-                  className="size-4"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-                  />
-                </svg>
-              </button>
+              <div>
+                <Button onClick={generateAirwayBills}>Generate Print</Button>
+              </div>
             </div>
           </div>
 
@@ -92,20 +229,28 @@ export default function AirwayBills() {
             <div className="space-y-6">
               <div className="relative">
                 <div className="flex flex-wrap gap-2 overflow-x-auto no-scrollbar px-1 sm:px-2 md:px-0 max-w-full">
-                  {tabs.map((tab) => (
+                  {Object.keys(tabsCount).map((tab) => (
                     <Tab
-                      key={tab.label}
-                      label={tab.label}
-                      count={tab.count}
-                      active={activeTab === tab.label}
-                      onClick={() => setActiveTab(tab.label)}
+                      key={tab}
+                      label={tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      count={tabsCount[tab]}
+                      active={activeTab === tab}
+                      onClick={() => {
+                        setActiveTab(tab);
+                        setStatus("");
+                      }}
                     />
                   ))}
                 </div>
               </div>
 
               <div className="w-full">
-                <form>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSearch();
+                  }}
+                >
                   <Label>Advanced Search</Label>
                   <div className="relative">
                     {/* Search Icon */}
@@ -127,6 +272,8 @@ export default function AirwayBills() {
                     {/* Search Input */}
                     <input
                       type="text"
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
                       placeholder={`Search by ${searchType.toLowerCase()}...`}
                       className="w-full h-11 rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-[160px] text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 sm:pr-[120px]"
                     />
@@ -170,16 +317,17 @@ export default function AirwayBills() {
                       <Label>Status</Label>
                       <Select
                         options={options}
-                        defaultValue=""
+                        defaultValue={status}
                         placeholder="Choose Order Status"
-                        onChange={handleSelectChange}
+                        onChange={(val: string) => setStatus(val)}
                       />
                     </div>
 
                     <div className="col-span-1">
                       <Label>Start Date</Label>
                       <DatePicker
-                        // onChange={handleStartDateChange}
+                        value={startDate}
+                        onChange={(val) => setStartDate(val)}
                         format="YYYY-MM-DD"
                         className="w-full h-11 rounded-lg border border-gray-200 shadow-theme-xs"
                         placeholder="Select Start Date"
@@ -189,7 +337,8 @@ export default function AirwayBills() {
                     <div className="col-span-1">
                       <Label>End Date</Label>
                       <DatePicker
-                        // onChange={handleStartDateChange}
+                        value={endDate}
+                        onChange={(val) => setEndDate(val)}
                         format="YYYY-MM-DD"
                         className="w-full h-11 rounded-lg border border-gray-200 shadow-theme-xs"
                         placeholder="Select Start Date"
@@ -198,13 +347,43 @@ export default function AirwayBills() {
                   </div>
 
                   <div className="my-4 flex justify-end gap-3">
-                    <Button className="" variant="outline">
+                    <Button
+                      className=""
+                      variant="outline"
+                      onClick={handleClear}
+                    >
                       Clear Filter
                     </Button>
-                    <Button variant="primary">Search Filter</Button>
+                    <Button type="submit" variant="primary">
+                      Search Filter
+                    </Button>
                   </div>
                 </form>
               </div>
+            </div>
+          </div>
+
+          {/* Card Body */}
+          <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
+            <div className="space-y-6">
+              <Table
+                rowKey="_id"
+                dataSource={dataSource}
+                columns={columns}
+                scroll={{ x: "max-content" }}
+                pagination={{
+                  position: ["topRight"],
+                  total: totalCounts,
+                  showTotal: (total, range) =>
+                    `Showing ${range[0]} to ${range[1]} of ${total} entries`,
+                  showSizeChanger: true,
+                  pageSizeOptions: [10, 30, 50, 100],
+                  defaultPageSize: 10,
+                  defaultCurrent: 1,
+                  onChange: (page, pageSize) =>
+                    handlePagination(page, pageSize),
+                }}
+              />
             </div>
           </div>
         </div>

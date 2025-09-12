@@ -292,10 +292,10 @@ exports.orderLogs = async (req, res) => {
           query.orderNumber = { $regex: search, $options: "i" };
           break;
         case "name":
-          query.customer.name = { $regex: search, $options: "i" };
+          query["customer.name"] = { $regex: search, $options: "i" };
           break;
         case "phone":
-          query.customer.contactNumber = { $regex: search, $options: "i" };
+          query["customer.contactNumber"] = { $regex: search, $options: "i" };
           break;
       }
     }
@@ -304,6 +304,118 @@ exports.orderLogs = async (req, res) => {
       .find(query)
       .select(
         "orderNumber orderType refNumber amount items weight status createdAt customerName customerPhone"
+      )
+      .limit(Number(limit))
+      .skip(Number(skip));
+
+    const countsAgg = await orderModel.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(req.user.id), // 👈 important
+        },
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const orderCount = await orderModel.countDocuments({ userId: req.user.id });
+
+    const counts = {
+      all: orderCount,
+      booked: 0,
+      unbooked: 0,
+      inTransit: 0,
+      delivered: 0,
+      returned: 0,
+      cancelled: 0,
+      expired: 0,
+      lost: 0,
+      stolen: 0,
+      damage: 0,
+    };
+
+    countsAgg.forEach((c) => {
+      counts[c._id] = c.count;
+    });
+    const data = {
+      orders,
+      counts,
+    };
+    response.success_message(data, res, orderCount);
+  } catch (error) {
+    console.log(error.message);
+    return response.error_message(error.message, res);
+  }
+};
+
+exports.cancelOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const order = await orderModel.findOne({ _id: id, userId: req.user.id });
+
+    if (!order) {
+      return response.data_error_message(
+        {
+          message: "Order not found",
+        },
+        res
+      );
+    }
+    order.status = "cancelled";
+    await order.save();
+    response.success_message({ message: "Order Cancel Successfully" }, res);
+  } catch (error) {
+    console.log(error.message);
+    return response.error_message(error.message, res);
+  }
+};
+
+exports.airwayBills = async (req, res) => {
+  try {
+    const {
+      limit = 10,
+      skip = 0,
+      status,
+      startDate,
+      endDate,
+      search,
+      searchType,
+    } = req.query;
+
+    let query = { userId: req.user.id };
+
+    if (status && status !== "all") {
+      query.status = status;
+    }
+
+    if (startDate && endDate) {
+      query.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    } else if (startDate) {
+      query.createdAt = { $gte: new Date(startDate) };
+    } else if (endDate) {
+      query.createdAt = { $lte: new Date(endDate) };
+    }
+
+    if (search && searchType) {
+      switch (searchType) {
+        case "order ref":
+          query.refNumber = { $regex: search, $options: "i" };
+          break;
+        case "tracking":
+          query.orderNumber = { $regex: search, $options: "i" };
+          break;
+      }
+    }
+
+    const orders = await orderModel
+      .find(query)
+      .select(
+        "-__v -updateAt"
       )
       .limit(Number(limit))
       .skip(Number(skip));

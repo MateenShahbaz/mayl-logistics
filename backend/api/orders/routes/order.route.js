@@ -9,5 +9,7 @@ router.get("/view/:id", orderController.view);
 router.get("/tracking/:tackingNo", orderController.trackOrder);
 router.put("/edit/:id", orderController.edit);
 router.get("/orderlogs", orderController.orderLogs);
+router.get("/airwayBills", orderController.airwayBills);
+router.put("/cancel/:id", orderController.cancelOrder);
 
 module.exports = router;

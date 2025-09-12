@@ -50,7 +50,14 @@ type FormData = {
   notes: string;
   [key: string]: any; // 👈 allows indexing with string
 };
-
+type BadgeColor =
+  | "primary"
+  | "success"
+  | "error"
+  | "warning"
+  | "info"
+  | "light"
+  | "dark";
 const Order = () => {
   const [dataSource, setDataSource] = useState<Order[]>([]);
   const [totalCounts, settotalCounts] = useState(0);
@@ -333,6 +340,20 @@ const Order = () => {
       openModal();
     }
   };
+
+  const statusColorMap: Record<string, BadgeColor> = {
+    booked: "primary",
+    unbooked: "warning",
+    inTransit: "info",
+    delivered: "success",
+    returned: "dark",
+    cancelled: "error",
+    expired: "error",
+    lost: "error",
+    stolen: "error",
+    damage: "error",
+  };
+
   const columns = [
     {
       title: "Order Number",
@@ -365,11 +386,14 @@ const Order = () => {
     {
       title: "Status",
       key: "status",
-      render: (record: Order) => (
-        <Badge color="success" size="sm">
-          {record.status}
-        </Badge>
-      ),
+      render: (record: Order) => {
+        const badgeColor = statusColorMap[record.status] || "light"; // fallback
+        return (
+          <Badge color={badgeColor} size="sm">
+            {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+          </Badge>
+        );
+      },
     },
     {
       title: "Action",
