@@ -276,11 +276,20 @@ exports.orderLogs = async (req, res) => {
     }
 
     if (startDate && endDate) {
-      query.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lt: new Date(
+          new Date(endDate).setDate(new Date(endDate).getDate() + 1)
+        ),
+      };
     } else if (startDate) {
       query.createdAt = { $gte: new Date(startDate) };
     } else if (endDate) {
-      query.createdAt = { $lte: new Date(endDate) };
+      query.createdAt = {
+        $lt: new Date(
+          new Date(endDate).setDate(new Date(endDate).getDate() + 1)
+        ),
+      };
     }
 
     if (search && searchType) {
@@ -394,11 +403,20 @@ exports.airwayBills = async (req, res) => {
     }
 
     if (startDate && endDate) {
-      query.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lt: new Date(
+          new Date(endDate).setDate(new Date(endDate).getDate() + 1)
+        ),
+      };
     } else if (startDate) {
       query.createdAt = { $gte: new Date(startDate) };
     } else if (endDate) {
-      query.createdAt = { $lte: new Date(endDate) };
+      query.createdAt = {
+        $lt: new Date(
+          new Date(endDate).setDate(new Date(endDate).getDate() + 1)
+        ),
+      };
     }
 
     if (search && searchType) {
@@ -414,9 +432,7 @@ exports.airwayBills = async (req, res) => {
 
     const orders = await orderModel
       .find(query)
-      .select(
-        "-__v -updateAt"
-      )
+      .select("-__v -updateAt")
       .limit(Number(limit))
       .skip(Number(skip));
 

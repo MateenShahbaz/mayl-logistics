@@ -164,7 +164,6 @@ export const generatePDF = async (order: any) => {
   doc.save("order.pdf");
 };
 
-
 export const generatePDFForOrders = async (orders: any[]) => {
   const doc = new jsPDF("p", "mm", "a4");
   const perPage = 3; // 3 airway bills per page
@@ -211,7 +210,11 @@ export const generatePDFForOrders = async (orders: any[]) => {
         startY: yOffset + 18,
         margin: { left: 12, right: 12 },
         head: [
-          ["Consignee Information", "Shipment Information", "Order Information"],
+          [
+            "Consignee Information",
+            "Shipment Information",
+            "Order Information",
+          ],
         ],
         body: [
           [
@@ -224,7 +227,9 @@ export const generatePDFForOrders = async (orders: any[]) => {
               styles: { fontStyle: "bold" },
             },
             {
-              content: `Date: ${new Date().toLocaleDateString()}\nOrder Type: ${order.orderType}\nAmount: ${order.amount}/-`,
+              content: `Date: ${new Date().toLocaleDateString()}\nOrder Type: ${
+                order.orderType
+              }\nAmount: ${order.amount}/-`,
               styles: { fontStyle: "bold" },
             },
           ],
@@ -287,4 +292,116 @@ export const generatePDFForOrders = async (orders: any[]) => {
   }
 
   doc.save("orders.pdf");
+};
+
+export const generateLoadSheetPDF = async (
+  orders: any[],
+  shipperInfo: {
+    shipperName: string;
+    loadsheetNumber: string;
+    personOfContact: string;
+    pickupAddress: string;
+    phoneNo: string;
+    origin: string;
+  }
+) => {
+  const doc = new jsPDF("p", "mm", "a4");
+
+  // ✅ Company Logo (left side)
+  const logoBase64 = await getBase64Image("/images/logo/dark-logo.png");
+  doc.addImage(logoBase64, "PNG", 15, 10, 35, 15);
+
+  // ✅ Title (center)
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("Load Sheet", 105, 18, { align: "center" });
+
+  // ✅ QR Code (top-right corner)
+  const qrCodeData = await QRCode.toDataURL(
+    shipperInfo.loadsheetNumber || "N/A"
+  );
+  doc.addImage(qrCodeData, "PNG", 170, 10, 20, 20); // smaller & above table
+
+  autoTable(doc, {
+    startY: 35, // push table below QR code
+    margin: { left: 15, right: 15 },
+    body: [
+      ["Shipper", shipperInfo.shipperName],
+      ["Loadsheet Number", shipperInfo.loadsheetNumber],
+      ["Person Of Contact", shipperInfo.personOfContact],
+      ["Pickup Address", shipperInfo.pickupAddress],
+      ["Phone No", shipperInfo.phoneNo],
+      ["Origin", shipperInfo.origin],
+      ["Total Shipment(s)", orders.length.toString()],
+      [
+        "Total Amount",
+        orders.reduce((sum, o) => sum + (o.amount || 0), 0).toFixed(2),
+      ],
+    ],
+    styles: { fontSize: 10, cellPadding: 2, lineWidth: 0.2 },
+    columnStyles: {
+      0: { cellWidth: 50, fontStyle: "bold" },
+      1: { cellWidth: 130 },
+    },
+    theme: "grid",
+  });
+
+  // ✅ Orders Table (Colored Head Only)
+  autoTable(doc, {
+    startY: (doc.lastAutoTable?.finalY ?? 60) + 5,
+    margin: { left: 15, right: 15 },
+    head: [
+      [
+        "S.No",
+        "Tracking No",
+        "Order Reference",
+        "Consignee Detail",
+        "Booking Date",
+        "Destination",
+        "Invoice Amount",
+      ],
+    ],
+    body: orders.map((o, index) => [
+      index + 1,
+      o.orderNumber,
+      o.refNumber,
+      `${o.customer.name} - ${o.customer.contactNumber}`,
+      new Date(o.createdAt || Date.now()).toISOString().split("T")[0],
+      o.customer.deliverCity,
+      o.amount?.toFixed(2) || "0.00",
+    ]),
+    styles: {
+      fontSize: 9,
+      cellPadding: 2,
+      lineWidth: 0.2,
+      fillColor: false, // ❌ no background for body
+    },
+    headStyles: {
+      fillColor: [220, 220, 220], // ✅ light gray header
+      textColor: 0,
+      fontStyle: "bold",
+    },
+    theme: "grid",
+  });
+
+  // ✅ Footer
+  const finalY = (doc.lastAutoTable?.finalY ?? 40) + 20;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+
+  doc.text("No of Shipments Received: _______________________", 15, finalY);
+  doc.text("Client Signature ___________________", 150, finalY);
+
+  doc.setFont("helvetica", "bold");
+  doc.text("For Office Use", 105, finalY + 15, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.text("Rider Name: ___________________", 15, finalY + 35);
+  doc.text("Shipment Picked at: ___________________", 15, finalY + 45);
+
+  doc.text("Rider Signature ___________________", 15, finalY + 65);
+  doc.text("Office Signature ___________________", 150, finalY + 65);
+
+  doc.save("loadsheet.pdf");
 };

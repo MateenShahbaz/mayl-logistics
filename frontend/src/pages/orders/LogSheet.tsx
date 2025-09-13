@@ -1,13 +1,164 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Label from "../../components/form/Label";
 import Button from "../../components/ui/button/Button";
+import { apiCaller } from "../../core/API/ApiServices";
+import { Table } from "antd";
 
+interface RiderInfo {
+  name: string;
+  phoneNo: string;
+  employeeCode: string;
+}
+
+export interface LoadSheet {
+  id: string;
+  loadsheetNumber: string;
+  status: string;
+  createdAt: string; // ISO string (can format with dayjs/moment)
+  rider: RiderInfo;
+  totalOrders: number;
+  pickedOrders: number;
+  unpickedOrders: number;
+}
 
 const searchOptions = ["LOAD SHEET #", "RIDER #"];
 export default function LogSheet() {
   const [searchType, setSearchType] = useState("LOAD SHEET #");
+  const [searchValue, setSearchValue] = useState("");
+  const [dataSource, setDataSource] = useState<LoadSheet[]>([]);
+  const [totalCounts, settotalCounts] = useState(0);
+  const [, setPage] = useState(1);
+  const [, setPagesize] = useState(10);
+
+  const handleSearch = async (currentpage = 1, currentpagesize = 10) => {
+    let skipSize = currentpage === 1 ? 0 : (currentpage - 1) * currentpagesize;
+
+    const params: any = {
+      limit: currentpagesize,
+      skip: skipSize,
+    };
+
+    if (searchValue) {
+      params.search = searchValue;
+      params.searchType = searchType.toLowerCase().replace(/\s+#/g, "");
+    }
+
+    const response = await apiCaller({
+      method: "GET",
+      url: `/loadSheet/list`,
+      params,
+    });
+    if (response.code === 200) {
+      setDataSource(response.data);
+      settotalCounts(response.totalRecords);
+    }
+  };
+
+  const handleClear = () => {
+    setSearchValue("");
+    setSearchType("LOAD SHEET #");
+    fetchDetails();
+  };
+
+  const fetchDetails = async (currentpage = 1, currentpagesize = 10) => {
+    let skipSize;
+    skipSize = currentpage == 1 ? 0 : (currentpage - 1) * currentpagesize;
+    const params: any = {
+      limit: currentpagesize,
+      skip: skipSize,
+    };
+
+    if (searchValue) {
+      params.search = searchValue;
+      params.searchType = searchType.toLowerCase().replace(/\s+#/g, "");
+    }
+
+    const response = await apiCaller({
+      method: "GET",
+      url: `/loadSheet/list`,
+      params,
+    });
+    if (response.code === 200) {
+      setDataSource(response.data);
+      settotalCounts(response.totalRecords);
+    }
+  };
+
+  useEffect(() => {
+    fetchDetails();
+  }, []);
+  const handlePagination = async (page: number, pageSize: number) => {
+    setPage(page);
+    setPagesize(pageSize);
+    fetchDetails(page, pageSize);
+  };
+
+  const columns = [
+    {
+      title: "LoadSheet No",
+      dataIndex: "loadsheetNumber",
+      key: "loadsheetNumber",
+    },
+    {
+      title: "Date",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (text: string) => new Date(text).toLocaleDateString(),
+    },
+    {
+      title: "Rider",
+      key: "rider",
+      render: (record: LoadSheet) => (
+        <>
+          <div>
+            <strong>{record.rider?.name || "N/A"}</strong>
+          </div>
+          <div>{record.rider?.phoneNo}</div>
+          <div>{record.rider?.employeeCode}</div>
+        </>
+      ),
+    },
+    // {
+    //   title: "Total Orders",
+    //   dataIndex: "totalOrders",
+    //   key: "totalOrders",
+    // },
+    // {
+    //   title: "Picked",
+    //   dataIndex: "pickedOrders",
+    //   key: "pickedOrders",
+    // },
+    // {
+    //   title: "Unpicked",
+    //   dataIndex: "unpickedOrders",
+    //   key: "unpickedOrders",
+    // },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status: string) => (
+        <span
+          style={{
+            padding: "2px 8px",
+            borderRadius: "8px",
+            backgroundColor:
+              status === "new"
+                ? "#f59e0b" // yellow
+                : status === "completed"
+                ? "#10b981" // green
+                : "#6b7280", // gray
+            color: "#fff",
+          }}
+        >
+          {status.toUpperCase()}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <>
       <PageMeta
@@ -64,7 +215,12 @@ export default function LogSheet() {
           <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
             <div className="space-y-6">
               <div className="w-full">
-                <form>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSearch();
+                  }}
+                >
                   <Label>Advanced Search</Label>
                   <div className="relative">
                     {/* Search Icon */}
@@ -86,6 +242,8 @@ export default function LogSheet() {
                     {/* Search Input */}
                     <input
                       type="text"
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
                       placeholder={`Search by ${searchType.toLowerCase()}...`}
                       className="w-full h-11 rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-[160px] text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 sm:pr-[120px]"
                     />
@@ -124,13 +282,40 @@ export default function LogSheet() {
                     </div>
                   </div>
                   <div className="my-4 flex justify-end gap-3">
-                    <Button className="" variant="outline">
+                    <Button
+                      className=""
+                      variant="outline"
+                      onClick={handleClear}
+                    >
                       Clear Filter
                     </Button>
                     <Button variant="primary">Search Filter</Button>
                   </div>
                 </form>
               </div>
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
+            <div className="space-y-6">
+              <Table
+                rowKey="_id"
+                dataSource={dataSource}
+                columns={columns}
+                scroll={{ x: "max-content" }}
+                pagination={{
+                  position: ["topRight"],
+                  total: totalCounts,
+                  showTotal: (total, range) =>
+                    `Showing ${range[0]} to ${range[1]} of ${total} entries`,
+                  showSizeChanger: true,
+                  pageSizeOptions: [10, 30, 50, 100],
+                  defaultPageSize: 10,
+                  defaultCurrent: 1,
+                  onChange: (page, pageSize) =>
+                    handlePagination(page, pageSize),
+                }}
+              />
             </div>
           </div>
         </div>

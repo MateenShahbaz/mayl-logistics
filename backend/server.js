@@ -35,3 +35,6 @@ app.use("/dropdown", jwtauth, dropdownRoutes);
 
 const orderRoutes = require("./api/orders/routes/order.route");
 app.use("/order", jwtauth, orderRoutes);
+
+const loadSheetRoutes = require("./api/loadSheet/routes/loadSheet.route");
+app.use("/loadSheet", jwtauth, loadSheetRoutes);
