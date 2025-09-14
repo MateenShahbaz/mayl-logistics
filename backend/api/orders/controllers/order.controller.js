@@ -402,7 +402,11 @@ exports.airwayBills = async (req, res) => {
       searchType,
     } = req.query;
 
-    let query = { userId: req.user.id };
+    let query = {};
+
+    if (req.user.role !== "Admin") {
+      query.userId = req.user.id;
+    }
 
     if (status && status !== "all") {
       query.status = status;
@@ -442,11 +446,14 @@ exports.airwayBills = async (req, res) => {
       .limit(Number(limit))
       .skip(Number(skip));
 
+    const matchStage =
+      req.user.role === "Admin"
+        ? {}
+        : { userId: new mongoose.Types.ObjectId(req.user.id) };
+
     const countsAgg = await orderModel.aggregate([
       {
-        $match: {
-          userId: new mongoose.Types.ObjectId(req.user.id), // 👈 important
-        },
+        $match: matchStage,
       },
       {
         $group: {

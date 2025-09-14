@@ -12,7 +12,7 @@ const AuthSchema = new mongoose.Schema(
     },
     merchant: {
       type: String,
-      required: true,
+      required: false,
     },
     email: {
       type: String,

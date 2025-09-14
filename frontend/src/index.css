@@ -865,6 +865,8 @@ span.flatpickr-weekday,
   z-index: 100000 !important;
   top: 80px; 
 }
-.ant-table-content{
+/* .ant-table-content{
   overflow: visible !important;
 }
+
+.ant-table-wrapper */

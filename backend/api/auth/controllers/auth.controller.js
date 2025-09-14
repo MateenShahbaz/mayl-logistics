@@ -48,9 +48,9 @@ exports.signup = async (req, res) => {
       password: hashedPassword,
       phoneNo,
       shipperNumber: nextShipperNumber,
-      role: "Shipper",
+      role: "Admin",
       status: true,
-      isVerified: false,
+      isVerified: true,
     });
 
     await newUser.save();
@@ -109,7 +109,7 @@ exports.login = async (req, res) => {
         role: user?.role,
         shipperNumber: user?.shipperNumber,
         merchant: user?.merchant,
-        phoneNo: user?.phoneNo
+        phoneNo: user?.phoneNo,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }

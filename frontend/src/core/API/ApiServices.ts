@@ -2,9 +2,9 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { errorToast } from "../core-index";
 import { loadingEmitter } from "../../utils/loadingEmitter";
-
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const API = axios.create({
-  baseURL: "http://localhost:8888",
+  baseURL: apiUrl,
   headers: {
     "Content-Type": "application/json",
   },
