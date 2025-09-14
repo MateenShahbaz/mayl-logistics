@@ -58,6 +58,7 @@ export default function LoadSheet() {
   const [totalCounts, settotalCounts] = useState(0);
   const [, setPage] = useState(1);
   const [, setPagesize] = useState(10);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedRows, setSelectedRows] = useState<Order[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -75,8 +76,11 @@ export default function LoadSheet() {
 
   const { isOpen, openModal, closeModal } = useModal();
   const rowSelection = {
-    onChange: (_selectedRowKeys: React.Key[], selectedRows: Order[]) => {
-      setSelectedRows(selectedRows);
+    selectedRowKeys,
+    preserveSelectedRowKeys: true,
+    onChange: (newSelectedRowKeys: React.Key[], newSelectedRows: Order[]) => {
+      setSelectedRowKeys(newSelectedRowKeys);
+      setSelectedRows(newSelectedRows);
     },
   };
   const handleSearch = async (currentpage = 1, currentpagesize = 10) => {
@@ -164,7 +168,7 @@ export default function LoadSheet() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedRows.length === 0) {
+    if (selectedRowKeys.length === 0) {
       infoToast("Please select at least one order to generate Load Sheet PDF");
       return;
     }
@@ -178,8 +182,13 @@ export default function LoadSheet() {
     }
 
     try {
-      const orderIds = selectedRows.map((order: any) => order._id);
-      const firstOrder = selectedRows[0];
+      const orderIds = selectedRowKeys as string[];
+
+      const selectedOrders = selectedRows.filter((order) =>
+        orderIds.includes(order._id)
+      );
+
+      const firstOrder = selectedOrders[0];
       const response = await apiCaller({
         method: "POST",
         url: "/loadSheet/add",
@@ -195,16 +204,30 @@ export default function LoadSheet() {
       if (response.code === 200) {
         successToast("LoadSheet created successfully!");
         const { data } = response;
-        await generateLoadSheetPDF(selectedRows, {
-          shipperName: firstOrder.merchant,
-          loadsheetNumber: data.loadsheetNumber,
-          personOfContact: firstOrder.merchant,
-          pickupAddress: firstOrder.shipperInfo.pickupAddress,
-          phoneNo: firstOrder.shipperInfo.mobile,
-          origin: "Lahore",
-        });
+        await generateLoadSheetPDF(
+          selectedRows,
+          {
+            shipperName: firstOrder.merchant,
+            loadsheetNumber: data.loadsheetNumber,
+            personOfContact: firstOrder.merchant,
+            pickupAddress: firstOrder.shipperInfo.pickupAddress,
+            phoneNo: firstOrder.shipperInfo.mobile,
+            origin: "Lahore",
+          },
+          {
+            name: formData.name,
+            phoneNo: formData.phoneNo,
+            employeeCode: formData.employeeCode,
+          }
+        );
+        setSelectedRowKeys([]);
         setSelectedRows([]);
         setSearchValue("");
+        setFormData({
+          name: "",
+          employeeCode: "",
+          phoneNo: "",
+        });
         setStartDate(null);
         setEndDate(null);
         setSearchType("ORDER REF #");
@@ -330,7 +353,7 @@ export default function LoadSheet() {
                 </svg>
               </button> */}
               <Button onClick={openModal}>
-                Generate Load Sheet ({selectedRows.length})
+                Generate Load Sheet ({selectedRowKeys.length})
               </Button>
             </div>
           </div>

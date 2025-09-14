@@ -141,17 +141,55 @@ exports.list = async (req, res) => {
 
     const loadSheets = await loadSheetModel
       .find(query)
-      .populate("orders", "status")
+      .select("-userId")
       .limit(Number(limit))
-      .skip(Number(skip));
+      .skip(Number(skip))
+      .lean();
 
+    const formattedLoadSheets = loadSheets.map((ls) => {
+      const totalOrders = ls.orders?.length || 0;
+      const pickedOrders = ls.orders?.length || 0;
+      const unpickedOrders = 0;
+
+      return {
+        id: ls._id.toString(),
+        loadsheetNumber: ls.loadsheetNumber,
+        status: ls.status,
+        createdAt: ls.createdAt,
+        rider: ls.rider,
+        totalOrders,
+        pickedOrders,
+        unpickedOrders,
+      };
+    });
     const loadSheetCount = await loadSheetModel.countDocuments({
       userId: req.user.id,
     });
 
-    return response.success_message(loadSheets, res, loadSheetCount);
+    return response.success_message(formattedLoadSheets, res, loadSheetCount);
   } catch (error) {
     console.error("Error fetching loadsheets:", error.message);
+    return response.error_message(error.message, res);
+  }
+};
+
+exports.getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    const loadSheet = await loadSheetModel
+      .findOne({ _id: id, userId: user.id })
+      .select("orders")
+      .populate("orders", "orderNumber refNumber amount customer createdAt");
+
+    if (!loadSheet) {
+      return response.error_message({ message: "LoadSheet not found" }, res);
+    }
+
+    return response.success_message(loadSheet, res);
+  } catch (error) {
+    console.error("Error fetching loadsheet details:", error.message);
     return response.error_message(error.message, res);
   }
 };

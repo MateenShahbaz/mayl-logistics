@@ -5,6 +5,8 @@ import Label from "../../components/form/Label";
 import Button from "../../components/ui/button/Button";
 import { apiCaller } from "../../core/API/ApiServices";
 import { Table } from "antd";
+import { useModal } from "../../hooks/useModal";
+import { Modal } from "../../components/ui/modal";
 
 interface RiderInfo {
   name: string;
@@ -25,9 +27,11 @@ export interface LoadSheet {
 
 const searchOptions = ["LOAD SHEET #", "RIDER #"];
 export default function LogSheet() {
+  const { isOpen, openModal, closeModal } = useModal();
   const [searchType, setSearchType] = useState("LOAD SHEET #");
   const [searchValue, setSearchValue] = useState("");
   const [dataSource, setDataSource] = useState<LoadSheet[]>([]);
+  const [orders, setOrders] = useState<any>([]);
   const [totalCounts, settotalCounts] = useState(0);
   const [, setPage] = useState(1);
   const [, setPagesize] = useState(10);
@@ -86,6 +90,16 @@ export default function LogSheet() {
     }
   };
 
+  const fetchOrders = async (id: string) => {
+    const response = await apiCaller({
+      method: "GET",
+      url: `/loadSheet/getorder/${id}`,
+    });
+    if (response.code === 200) {
+      setOrders(response.data.orders);
+      openModal();
+    }
+  };
   useEffect(() => {
     fetchDetails();
   }, []);
@@ -120,21 +134,31 @@ export default function LogSheet() {
         </>
       ),
     },
-    // {
-    //   title: "Total Orders",
-    //   dataIndex: "totalOrders",
-    //   key: "totalOrders",
-    // },
-    // {
-    //   title: "Picked",
-    //   dataIndex: "pickedOrders",
-    //   key: "pickedOrders",
-    // },
-    // {
-    //   title: "Unpicked",
-    //   dataIndex: "unpickedOrders",
-    //   key: "unpickedOrders",
-    // },
+    {
+      title: "Total Orders",
+      key: "totalOrders",
+      render: (record: LoadSheet) => (
+        <div
+          style={{
+            cursor: "pointer",
+            color: "blue",
+          }}
+          onClick={() => fetchOrders(record.id)}
+        >
+          {record.totalOrders}
+        </div>
+      ),
+    },
+    {
+      title: "Picked",
+      dataIndex: "pickedOrders",
+      key: "pickedOrders",
+    },
+    {
+      title: "Unpicked",
+      dataIndex: "unpickedOrders",
+      key: "unpickedOrders",
+    },
     {
       title: "Status",
       dataIndex: "status",
@@ -142,7 +166,7 @@ export default function LogSheet() {
       render: (status: string) => (
         <span
           style={{
-            padding: "2px 8px",
+            padding: "6px 10px",
             borderRadius: "8px",
             backgroundColor:
               status === "new"
@@ -320,6 +344,94 @@ export default function LogSheet() {
           </div>
         </div>
       </div>
+
+      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[750px] m-4">
+        <div className="no-scrollbar relative w-full max-w-[750px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+          <div className="px-2 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              Total Orders
+            </h4>
+          </div>
+          {/* <form className="flex flex-col"> */}
+            {/* <div className="custom-scrollbar h-auto overflow-y-auto px-2 pb-3"> */}
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border border-gray-300 px-3 py-2 text-left">
+                      S.No
+                    </th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">
+                      Tracking No
+                    </th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">
+                      Order Reference
+                    </th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">
+                      Consignee Detail
+                    </th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">
+                      Booking Date
+                    </th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">
+                      Destination
+                    </th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">
+                      Invoice Amount
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.length > 0 ? (
+                    orders.map((order: any, index: any) => (
+                      <tr key={order._id} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 px-3 py-2">
+                          {index + 1}
+                        </td>
+                        <td className="border border-gray-300 px-3 py-2">
+                          {order.orderNumber}
+                        </td>
+                        <td className="border border-gray-300 px-3 py-2">
+                          {order.refNumber}
+                        </td>
+                        <td className="border border-gray-300 px-3 py-2">
+                          {order.customer?.name} - {order.customer?.contactNumber}
+                        </td>
+                        <td className="border border-gray-300 px-3 py-2">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="border border-gray-300 px-3 py-2">
+                          Lahore
+                        </td>
+                        <td className="border border-gray-300 px-3 py-2">
+                          {order.amount?.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        className="border border-gray-300 px-3 py-4 text-center"
+                        colSpan={7}
+                      >
+                        No Orders Found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            {/* </div> */}
+
+            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+              <Button size="sm" variant="outline" onClick={closeModal}>
+                Close
+              </Button>
+              {/* <Button size="sm" type="submit">
+                Save
+              </Button> */}
+            </div>
+          {/* </form> */}
+        </div>
+      </Modal>
     </>
   );
 }

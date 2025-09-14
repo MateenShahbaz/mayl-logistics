@@ -303,50 +303,69 @@ export const generateLoadSheetPDF = async (
     pickupAddress: string;
     phoneNo: string;
     origin: string;
+  },
+  riderInfo?: {
+    name: string;
+    phoneNo: string;
+    employeeCode: string;
   }
 ) => {
   const doc = new jsPDF("p", "mm", "a4");
 
-  // ✅ Company Logo (left side)
+  // ✅ Logo
   const logoBase64 = await getBase64Image("/images/logo/dark-logo.png");
   doc.addImage(logoBase64, "PNG", 15, 10, 35, 15);
 
-  // ✅ Title (center)
+  // ✅ Title
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.text("Load Sheet", 105, 18, { align: "center" });
 
-  // ✅ QR Code (top-right corner)
+  // ✅ QR Code
   const qrCodeData = await QRCode.toDataURL(
     shipperInfo.loadsheetNumber || "N/A"
   );
-  doc.addImage(qrCodeData, "PNG", 170, 10, 20, 20); // smaller & above table
+  doc.addImage(qrCodeData, "PNG", 170, 10, 20, 20);
 
+  // ✅ Shipper + Rider Info Table
   autoTable(doc, {
-    startY: 35, // push table below QR code
+    startY: 35,
     margin: { left: 15, right: 15 },
+    head: [["Shipper Info", "Rider Info"]],
     body: [
-      ["Shipper", shipperInfo.shipperName],
-      ["Loadsheet Number", shipperInfo.loadsheetNumber],
-      ["Person Of Contact", shipperInfo.personOfContact],
-      ["Pickup Address", shipperInfo.pickupAddress],
-      ["Phone No", shipperInfo.phoneNo],
-      ["Origin", shipperInfo.origin],
-      ["Total Shipment(s)", orders.length.toString()],
       [
-        "Total Amount",
-        orders.reduce((sum, o) => sum + (o.amount || 0), 0).toFixed(2),
+        `Shipper: ${shipperInfo.shipperName}`,
+        `Rider Name: ${riderInfo?.name || "N/A"}`,
+      ],
+      [
+        `Loadsheet #: ${shipperInfo.loadsheetNumber}`,
+        `Employee Code: ${riderInfo?.employeeCode || "N/A"}`,
+      ],
+      [
+        `Person Of Contact: ${shipperInfo.personOfContact}`,
+        `Phone: ${riderInfo?.phoneNo || "N/A"}`,
+      ],
+      [`Pickup Address: ${shipperInfo.pickupAddress}`, ""],
+      [`Phone No: ${shipperInfo.phoneNo}`, ""],
+      [`Origin: ${shipperInfo.origin}`, ""],
+      [`Total Shipment(s): ${orders.length}`, ""],
+      [
+        `Total Amount: ${orders
+          .reduce((sum, o) => sum + (o.amount || 0), 0)
+          .toFixed(2)}`,
+        "",
       ],
     ],
     styles: { fontSize: 10, cellPadding: 2, lineWidth: 0.2 },
     columnStyles: {
-      0: { cellWidth: 50, fontStyle: "bold" },
-      1: { cellWidth: 130 },
+      0: { cellWidth: 90 },
+      1: { cellWidth: 90 },
     },
+    headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: "bold" },
     theme: "grid",
   });
 
-  // ✅ Orders Table (Colored Head Only)
+  // ✅ Orders Table
   autoTable(doc, {
     startY: (doc.lastAutoTable?.finalY ?? 60) + 5,
     margin: { left: 15, right: 15 },
@@ -370,17 +389,8 @@ export const generateLoadSheetPDF = async (
       o.customer.deliverCity,
       o.amount?.toFixed(2) || "0.00",
     ]),
-    styles: {
-      fontSize: 9,
-      cellPadding: 2,
-      lineWidth: 0.2,
-      fillColor: false, // ❌ no background for body
-    },
-    headStyles: {
-      fillColor: [220, 220, 220], // ✅ light gray header
-      textColor: 0,
-      fontStyle: "bold",
-    },
+    styles: { fontSize: 9, cellPadding: 2, lineWidth: 0.2 },
+    headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: "bold" },
     theme: "grid",
   });
 
@@ -397,11 +407,8 @@ export const generateLoadSheetPDF = async (
   doc.text("For Office Use", 105, finalY + 15, { align: "center" });
 
   doc.setFont("helvetica", "normal");
-  doc.text("Rider Name: ___________________", 15, finalY + 35);
-  doc.text("Shipment Picked at: ___________________", 15, finalY + 45);
-
-  doc.text("Rider Signature ___________________", 15, finalY + 65);
-  doc.text("Office Signature ___________________", 150, finalY + 65);
+  doc.text("Rider Signature ___________________", 15, finalY + 35);
+  doc.text("Office Signature ___________________", 150, finalY + 35);
 
   doc.save("loadsheet.pdf");
 };

@@ -179,9 +179,12 @@ exports.excelUpload = async (req, res) => {
       type: "pickup",
     });
     if (!defaultPickup) {
-      return response.data_error_message({
-        message: "Kindly make sure you have default pickup address",
-      });
+      return response.data_error_message(
+        {
+          message: "Kindly make sure you have default pickup address",
+        },
+        res
+      );
     }
 
     const defaultReturn = await addressModel.findOne({
@@ -190,9 +193,12 @@ exports.excelUpload = async (req, res) => {
       type: "return",
     });
     if (!defaultReturn) {
-      return response.data_error_message({
-        message: "Kindly make sure you have default return address",
-      });
+      return response.data_error_message(
+        {
+          message: "Kindly make sure you have default return address",
+        },
+        res
+      );
     }
 
     // Get last sequence
