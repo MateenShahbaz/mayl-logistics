@@ -3,10 +3,25 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const connectDB = require("./config/db");
 const { jwtauth } = require("./middleware/jwt.middleware");
-
+const cors = require("cors");
 const app = express();
 app.use(express.json());
-app.use(require("cors")());
+const allowedOrigins = ["https://mayllogistics.com", "http://localhost:5173"];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 connectDB();
 // Test Route
 app.get("/", (req, res) => {
