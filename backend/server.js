@@ -6,7 +6,13 @@ const { jwtauth } = require("./middleware/jwt.middleware");
 const cors = require("cors");
 const app = express();
 app.use(express.json());
-const allowedOrigins = ["https://mayllogistics.com", "http://localhost:5173"];
+const allowedOrigins = [
+  "https://mayllogistics.com",
+  "http://localhost:5173",
+  "http://mayllogistics.com",
+  "http://www.mayllogistics.com",
+  "https://www.mayllogistics.com",
+];
 
 app.use(
   cors({
