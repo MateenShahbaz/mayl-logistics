@@ -48,9 +48,9 @@ exports.signup = async (req, res) => {
       password: hashedPassword,
       phoneNo,
       shipperNumber: nextShipperNumber,
-      role: "Admin",
+      role: "Shipper",
       status: true,
-      isVerified: true,
+      isVerified: false,
     });
 
     await newUser.save();

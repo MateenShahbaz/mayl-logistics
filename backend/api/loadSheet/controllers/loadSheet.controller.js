@@ -148,8 +148,8 @@ exports.list = async (req, res) => {
 
     const formattedLoadSheets = loadSheets.map((ls) => {
       const totalOrders = ls.orders?.length || 0;
-      const pickedOrders = ls.orders?.length || 0;
-      const unpickedOrders = 0;
+      const pickedOrders = 0;
+      const unpickedOrders = ls.orders?.length || 0;
 
       return {
         id: ls._id.toString(),
@@ -190,6 +190,54 @@ exports.getOrderById = async (req, res) => {
     return response.success_message(loadSheet, res);
   } catch (error) {
     console.error("Error fetching loadsheet details:", error.message);
+    return response.error_message(error.message, res);
+  }
+};
+
+exports.printLoadSheet = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    const loadSheet = await loadSheetModel
+      .findOne({ _id: id, userId: user.id })
+      .populate(
+        "orders",
+        "orderNumber refNumber amount customer merchant shipperInfo createdAt"
+      );
+
+    if (!loadSheet) {
+      return response.error_message({ message: "LoadSheet not found" }, res);
+    }
+
+    return response.success_message(loadSheet, res);
+  } catch (error) {
+    console.error("Error fetching loadsheet details:", error.message);
+    return response.error_message(error.message, res);
+  }
+};
+
+exports.updateLoadSheetStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    const loadSheet = await loadSheetModel.findOneAndUpdate(
+      { _id: id, userId: user.id },
+      { status: "cancel" },
+      { new: true, runValidators: true }
+    );
+
+    if (!loadSheet) {
+      return response.error_message({ message: "LoadSheet not found" }, res);
+    }
+
+    return response.success_message(
+      { message: "Status updated successfully" },
+      res
+    );
+  } catch (error) {
+    console.error("Error updating loadsheet status:", error.message);
     return response.error_message(error.message, res);
   }
 };

@@ -16,7 +16,7 @@ const LoadSheetSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ["new"],
+      enum: ["new", "cancel"],
       default: "created",
     },
     rider: {

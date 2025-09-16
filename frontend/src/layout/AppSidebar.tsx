@@ -44,7 +44,7 @@ const navItems: NavItem[] = [
   },
   {
     icon: <CheckLineIcon />,
-    name: "Shipper",
+    name: "Profiles",
     subItems: [
       { name: "Verified", path: "/verified", pro: false },
       { name: "Unverified", path: "/unverified", pro: false },
@@ -80,7 +80,7 @@ const AppSidebar: React.FC = () => {
       .map((item) => {
         // SHIPPER: show everything except the "Shipper" menu
         if (user?.role === "Shipper") {
-          if (item.name === "Shipper") return null;
+          if (item.name === "Profiles") return null;
           return item;
         }
 
@@ -94,7 +94,7 @@ const AppSidebar: React.FC = () => {
               ),
             };
           }
-          if (item.name === "Shipper" || item.name === "User Profile") {
+          if (item.name === "Profiles" || item.name === "User Profile") {
             return item;
           }
           return null;

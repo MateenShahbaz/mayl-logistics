@@ -50,7 +50,7 @@ export default function SignInForm() {
         } else {
           const token = res.data?.token;
           if (token) {
-            localStorage.setItem("token", token);
+            sessionStorage.setItem("token", token);
             setUser(res.data?.data);
           }
           successToast("Signed in successfully!");

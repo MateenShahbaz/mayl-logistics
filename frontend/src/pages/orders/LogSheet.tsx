@@ -7,6 +7,11 @@ import { apiCaller } from "../../core/API/ApiServices";
 import { Table } from "antd";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../../components/ui/modal";
+import { MoreDotIcon } from "../../icons";
+import { Dropdown } from "../../components/ui/dropdown/Dropdown";
+import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
+import { generateLoadSheetPDF } from "../../utils/generatePDF";
+import { successToast } from "../../core/core-index";
 
 interface RiderInfo {
   name: string;
@@ -35,7 +40,15 @@ export default function LogSheet() {
   const [totalCounts, settotalCounts] = useState(0);
   const [, setPage] = useState(1);
   const [, setPagesize] = useState(10);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
+  function toggleDropdown(recordId: string) {
+    setOpenDropdownId(openDropdownId === recordId ? null : recordId);
+  }
+
+  function closeDropdown() {
+    setOpenDropdownId(null);
+  }
   const handleSearch = async (currentpage = 1, currentpagesize = 10) => {
     let skipSize = currentpage === 1 ? 0 : (currentpage - 1) * currentpagesize;
 
@@ -109,6 +122,43 @@ export default function LogSheet() {
     fetchDetails(page, pageSize);
   };
 
+  const printSheet = async (id: string) => {
+    const response = await apiCaller({
+      method: "GET",
+      url: `/loadSheet/print/${id}`,
+    });
+    if (response.code === 200) {
+      const firstOrder = response.data.orders[0];
+      await generateLoadSheetPDF(
+        response.data.orders,
+        {
+          shipperName: firstOrder.merchant,
+          loadsheetNumber: response.data.loadsheetNumber,
+          personOfContact: firstOrder.merchant,
+          pickupAddress: firstOrder.shipperInfo.pickupAddress,
+          phoneNo: firstOrder.shipperInfo.mobile,
+          origin: "Lahore",
+        },
+        {
+          name: response.data.rider.name,
+          phoneNo: response.data.rider.phoneNo,
+          employeeCode: response.data.rider.employeeCode,
+        }
+      );
+    }
+  };
+
+  const cancelSheet = async (id: string) => {
+    const response = await apiCaller({
+      method: "PUT",
+      url: `/loadSheet/updatestatus/${id}`,
+    });
+    if (response.code === 200) {
+      successToast("Status is Changed");
+      fetchDetails();
+    }
+  };
+
   const columns = [
     {
       title: "LoadSheet No",
@@ -163,23 +213,90 @@ export default function LogSheet() {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => (
-        <span
-          style={{
-            padding: "6px 10px",
-            borderRadius: "8px",
-            backgroundColor:
-              status === "new"
-                ? "#f59e0b" // yellow
-                : status === "completed"
-                ? "#10b981" // green
-                : "#6b7280", // gray
-            color: "#fff",
-          }}
-        >
-          {status.toUpperCase()}
-        </span>
-      ),
+      render: (status: string) => {
+        let bgColor = "#6b7280"; // default gray
+
+        switch (status) {
+          case "new":
+            bgColor = "#f59e0b"; // yellow
+            break;
+          case "complete":
+            bgColor = "#10b981"; // green
+            break;
+          case "picked":
+            bgColor = "#3b82f6"; // blue
+            break;
+          case "cancel":
+            bgColor = "#ef4444"; // red
+            break;
+        }
+
+        return (
+          <span
+            style={{
+              padding: "6px 10px",
+              borderRadius: "8px",
+              backgroundColor: bgColor,
+              color: "#fff",
+              textTransform: "uppercase",
+              fontWeight: 500,
+            }}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Action",
+      dataIndex: "Action",
+      render: (_: any, record: LoadSheet) => {
+        return (
+          <div className="relative inline-block">
+            <button
+              className="dropdown-toggle"
+              onClick={() => toggleDropdown(record.id)}
+            >
+              <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 size-6" />
+            </button>
+            <Dropdown
+              isOpen={openDropdownId === record.id}
+              onClose={closeDropdown}
+              className="w-40 p-2"
+            >
+              <DropdownItem
+                onItemClick={() => {
+                  printSheet(record.id);
+                  closeDropdown();
+                }}
+                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              >
+                Print Sheet
+              </DropdownItem>
+              <DropdownItem
+                onItemClick={() => {
+                  cancelSheet(record.id);
+                  closeDropdown();
+                }}
+                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              >
+                Cancel
+              </DropdownItem>
+              {/* {record?.status === "unbooked" && (
+                    <DropdownItem
+                      onItemClick={() => {
+                        editHandle(record);
+                        closeDropdown();
+                      }}
+                      className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                    >
+                      Edit
+                    </DropdownItem>
+                  )} */}
+            </Dropdown>
+          </div>
+        );
+      },
     },
   ];
 
@@ -353,82 +470,80 @@ export default function LogSheet() {
             </h4>
           </div>
           {/* <form className="flex flex-col"> */}
-            {/* <div className="custom-scrollbar h-auto overflow-y-auto px-2 pb-3"> */}
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="border border-gray-300 px-3 py-2 text-left">
-                      S.No
-                    </th>
-                    <th className="border border-gray-300 px-3 py-2 text-left">
-                      Tracking No
-                    </th>
-                    <th className="border border-gray-300 px-3 py-2 text-left">
-                      Order Reference
-                    </th>
-                    <th className="border border-gray-300 px-3 py-2 text-left">
-                      Consignee Detail
-                    </th>
-                    <th className="border border-gray-300 px-3 py-2 text-left">
-                      Booking Date
-                    </th>
-                    <th className="border border-gray-300 px-3 py-2 text-left">
-                      Destination
-                    </th>
-                    <th className="border border-gray-300 px-3 py-2 text-left">
-                      Invoice Amount
-                    </th>
+          {/* <div className="custom-scrollbar h-auto overflow-y-auto px-2 pb-3"> */}
+          <table className="w-full border-collapse border border-gray-300 text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border border-gray-300 px-3 py-2 text-left">
+                  S.No
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-left">
+                  Tracking No
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-left">
+                  Order Reference
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-left">
+                  Consignee Detail
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-left">
+                  Booking Date
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-left">
+                  Destination
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-left">
+                  Invoice Amount
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.length > 0 ? (
+                orders.map((order: any, index: any) => (
+                  <tr key={order._id} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 px-3 py-2">
+                      {index + 1}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {order.orderNumber}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {order.refNumber}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {order.customer?.name} - {order.customer?.contactNumber}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">Lahore</td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {order.amount?.toFixed(2)}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {orders.length > 0 ? (
-                    orders.map((order: any, index: any) => (
-                      <tr key={order._id} className="hover:bg-gray-50">
-                        <td className="border border-gray-300 px-3 py-2">
-                          {index + 1}
-                        </td>
-                        <td className="border border-gray-300 px-3 py-2">
-                          {order.orderNumber}
-                        </td>
-                        <td className="border border-gray-300 px-3 py-2">
-                          {order.refNumber}
-                        </td>
-                        <td className="border border-gray-300 px-3 py-2">
-                          {order.customer?.name} - {order.customer?.contactNumber}
-                        </td>
-                        <td className="border border-gray-300 px-3 py-2">
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="border border-gray-300 px-3 py-2">
-                          Lahore
-                        </td>
-                        <td className="border border-gray-300 px-3 py-2">
-                          {order.amount?.toFixed(2)}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        className="border border-gray-300 px-3 py-4 text-center"
-                        colSpan={7}
-                      >
-                        No Orders Found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            {/* </div> */}
+                ))
+              ) : (
+                <tr>
+                  <td
+                    className="border border-gray-300 px-3 py-4 text-center"
+                    colSpan={7}
+                  >
+                    No Orders Found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          {/* </div> */}
 
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
-                Close
-              </Button>
-              {/* <Button size="sm" type="submit">
+          <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+            <Button size="sm" variant="outline" onClick={closeModal}>
+              Close
+            </Button>
+            {/* <Button size="sm" type="submit">
                 Save
               </Button> */}
-            </div>
+          </div>
           {/* </form> */}
         </div>
       </Modal>

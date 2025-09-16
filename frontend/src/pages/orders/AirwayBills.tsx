@@ -11,6 +11,9 @@ import Badge from "../../components/ui/badge/Badge";
 import { apiCaller } from "../../core/API/ApiServices";
 import { errorToast } from "../../core/core-index";
 import { generatePDFForOrders } from "../../utils/generatePDF";
+import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
+import { Dropdown } from "../../components/ui/dropdown/Dropdown";
+import { MoreDotIcon } from "../../icons";
 
 const options = [
   { value: "all", label: "All" },
@@ -58,7 +61,8 @@ export default function AirwayBills() {
   const [endDate, setEndDate] = useState<any>(null);
   const [, setPage] = useState(1);
   const [, setPagesize] = useState(10);
-
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Order[]>([]);
   const handleSearch = async (currentpage = 1, currentpagesize = 10) => {
     let skipSize = currentpage === 1 ? 0 : (currentpage - 1) * currentpagesize;
 
@@ -87,7 +91,14 @@ export default function AirwayBills() {
       setTabsCount(response.data.counts);
     }
   };
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  function toggleDropdown(recordId: string) {
+    setOpenDropdownId(openDropdownId === recordId ? null : recordId);
+  }
 
+  function closeDropdown() {
+    setOpenDropdownId(null);
+  }
   const handleClear = () => {
     setSearchValue("");
     setStatus("");
@@ -152,12 +163,26 @@ export default function AirwayBills() {
     stolen: "error",
     damage: "error",
   };
+  const rowSelection = {
+    selectedRowKeys,
+    preserveSelectedRowKeys: true,
+    onChange: (newSelectedRowKeys: React.Key[], newSelectedRows: Order[]) => {
+      setSelectedRowKeys(newSelectedRowKeys);
+      setSelectedRows(newSelectedRows);
+    },
+  };
 
   const generateAirwayBills = async () => {
-    if (dataSource.length === 0) {
-      errorToast("No orders");
+    if (selectedRows.length === 0) {
+      errorToast("No orders seleted");
     }
-    await generatePDFForOrders(dataSource);
+    await generatePDFForOrders(selectedRows);
+    setSelectedRowKeys([]);
+    setSelectedRows([]);
+    setSearchValue("");
+    setStartDate(null);
+    setEndDate(null);
+    setSearchType("ORDER REF #");
   };
   const columns = [
     {
@@ -200,6 +225,39 @@ export default function AirwayBills() {
         );
       },
     },
+    {
+      title: "Action",
+      dataIndex: "Action",
+      render: (_: any, record: Order) => {
+        return (
+          <div className="relative inline-block">
+            <button
+              className="dropdown-toggle"
+              onClick={() => toggleDropdown(record._id)}
+            >
+              <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 size-6" />
+            </button>
+            <Dropdown
+              isOpen={openDropdownId === record._id}
+              onClose={closeDropdown}
+              className="w-40 p-2"
+            >
+              <DropdownItem
+                onItemClick={closeDropdown}
+                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              >
+                <Link
+                  to={`/order-view/${record._id}`}
+                  className="flex items-center gap-3 w-full"
+                >
+                  View
+                </Link>
+              </DropdownItem>
+            </Dropdown>
+          </div>
+        );
+      },
+    },
   ];
   return (
     <>
@@ -219,7 +277,9 @@ export default function AirwayBills() {
             </h3>
             <div className="flex gap-2">
               <div>
-                <Button onClick={generateAirwayBills}>Generate Print</Button>
+                <Button onClick={generateAirwayBills}>
+                  Generate Print ({selectedRowKeys.length})
+                </Button>
               </div>
             </div>
           </div>
@@ -370,6 +430,7 @@ export default function AirwayBills() {
                 rowKey="_id"
                 dataSource={dataSource}
                 columns={columns}
+                rowSelection={rowSelection}
                 scroll={{ x: "max-content" }}
                 pagination={{
                   position: ["topRight"],

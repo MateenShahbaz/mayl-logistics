@@ -3,7 +3,7 @@ import { Navigate } from "react-router";
 import { isTokenValid } from "./auth";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   if (!isTokenValid(token)) {
     localStorage.removeItem("token");

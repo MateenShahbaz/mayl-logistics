@@ -31,7 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const userfetch = async () => {
     if (token) {
       const response = await apiCaller({
