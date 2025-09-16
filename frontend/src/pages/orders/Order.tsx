@@ -469,12 +469,12 @@ const Order = () => {
 
             {/* Card Body */}
             <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
-              <div className="space-y-6">
+              <div className="space-y-6 overflow-x-auto overflow-y-visible">
                 <Table
                   rowKey="_id"
                   dataSource={dataSource}
                   columns={columns}
-                  scroll={{ x: "max-content" }}
+                  // scroll={{ x: "max-content" }}
                   pagination={{
                     total: totalCounts,
                     showTotal: (total, range) =>
