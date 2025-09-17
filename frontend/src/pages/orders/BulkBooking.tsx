@@ -35,7 +35,7 @@ const BulkBooking: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   // const [validOrders, setValidOrders] = useState<OrderRow[]>([]);
   // const [invalidOrders, setInvalidOrders] = useState<OrderRow[]>([]);
-  const pkPhoneRegex = /^(?:\+92|0)3[0-9]{9}$/;
+  // const pkPhoneRegex = /^(?:\+92|0)3[0-9]{9}$/;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
@@ -99,12 +99,12 @@ const BulkBooking: React.FC = () => {
             errors.push("City must be Lahore only");
           }
 
-          if (
-            row["Customer Phone"] &&
-            !pkPhoneRegex.test(String(row["Customer Phone"]))
-          ) {
-            errors.push("Invalid phone number format");
-          }
+          // if (
+          //   row["Customer Phone"] &&
+          //   !pkPhoneRegex.test(String(row["Customer Phone"]))
+          // ) {
+          //   errors.push("Invalid phone number format");
+          // }
 
           let orderTypeValue =
             row["Order Type"] ??
