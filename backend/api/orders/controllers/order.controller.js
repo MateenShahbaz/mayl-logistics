@@ -463,7 +463,12 @@ exports.airwayBills = async (req, res) => {
       },
     ]);
 
-    const orderCount = await orderModel.countDocuments({ userId: req.user.id });
+    let filter = {};
+    if (req.user.role !== "Admin") {
+      filter.userId = req.user.id;
+    }
+
+    const orderCount = await orderModel.countDocuments(filter);
 
     const counts = {
       all: orderCount,
