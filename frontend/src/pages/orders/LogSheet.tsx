@@ -445,7 +445,7 @@ export default function LogSheet() {
                 columns={columns}
                 // scroll={{ x: "max-content" }}
                 pagination={{
-                  position: ["topRight"],
+                  // position: ["topRight"],
                   total: totalCounts,
                   showTotal: (total, range) =>
                     `Showing ${range[0]} to ${range[1]} of ${total} entries`,

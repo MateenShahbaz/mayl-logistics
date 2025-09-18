@@ -49,11 +49,29 @@ export const generatePDF = async (order: any) => {
     doc.rect(10, yOffset, 190, sectionHeight - 5);
 
     const refCanvas = document.createElement("canvas");
-    JsBarcode(refCanvas, order.refNumber || "0000", { format: "CODE128" });
+    JsBarcode(refCanvas, order.refNumber || "0000", {
+      format: "CODE128",
+      displayValue: true,
+      font: "monospace",
+      fontSize: 15,
+      textMargin: 4,
+      margin: 4,
+      width: 1.5,
+      height: 45,
+    });
     const refBarcode = refCanvas.toDataURL("image/png");
 
     const orderCanvas = document.createElement("canvas");
-    JsBarcode(orderCanvas, order.orderNumber || "0000", { format: "CODE128" });
+    JsBarcode(orderCanvas, order.orderNumber || "0000", {
+      format: "CODE128",
+      displayValue: true,
+      font: "monospace",
+      fontSize: 15,
+      textMargin: 4,
+      margin: 4,
+      width: 1.5,
+      height: 45,
+    });
     const orderBarcode = orderCanvas.toDataURL("image/png");
 
     const qrCodeData = await QRCode.toDataURL(order.orderNumber || "000000");
@@ -187,14 +205,29 @@ export const generatePDFForOrders = async (orders: any[]) => {
       doc.setDrawColor(150);
       doc.rect(10, yOffset, 190, sectionHeight - 5);
 
-      // Generate barcodes
       const refCanvas = document.createElement("canvas");
-      JsBarcode(refCanvas, order.refNumber || "0000", { format: "CODE128" });
+      JsBarcode(refCanvas, order.refNumber || "0000", {
+        format: "CODE128",
+        displayValue: true,
+        font: "monospace",
+        fontSize: 15,
+        textMargin: 4,
+        margin: 4,
+        width: 1.5,
+        height: 45,
+      });
       const refBarcode = refCanvas.toDataURL("image/png");
 
       const orderCanvas = document.createElement("canvas");
       JsBarcode(orderCanvas, order.orderNumber || "0000", {
         format: "CODE128",
+        displayValue: true,
+        font: "monospace",
+        fontSize: 15,
+        textMargin: 4,
+        margin: 4,
+        width: 1.5,
+        height: 45,
       });
       const orderBarcode = orderCanvas.toDataURL("image/png");
 

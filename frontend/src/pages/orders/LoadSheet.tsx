@@ -484,7 +484,7 @@ export default function LoadSheet() {
                   showTotal: (total, range) =>
                     `Showing ${range[0]} to ${range[1]} of ${total} entries`,
                   showSizeChanger: true,
-                  pageSizeOptions: [10, 30, 50, 100],
+                  pageSizeOptions: [10, 50, 100, totalCounts],
                   defaultPageSize: 10,
                   defaultCurrent: 1,
                   onChange: (page, pageSize) =>
