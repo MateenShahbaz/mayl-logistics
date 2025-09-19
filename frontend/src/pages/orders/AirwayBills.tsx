@@ -70,7 +70,6 @@ export interface Order {
   updatedAt: string;
 }
 
-
 type BadgeColor =
   | "primary"
   | "success"
@@ -216,44 +215,51 @@ export default function AirwayBills() {
     setSearchType("ORDER REF #");
   };
 
-const generateExcelSheet = async () => {
-  if (selectedRows.length === 0) {
-    errorToast("No orders selected");
-    return;
-  }
+  const generateExcelSheet = async () => {
+    if (selectedRows.length === 0) {
+      errorToast("No orders selected");
+      return;
+    }
 
-  // Convert selectedRows to worksheet
-  const worksheet = XLSX.utils.json_to_sheet(
-    selectedRows.map((order) => ({
-      "Order Number": order.orderNumber,
-      "Order Type": order.orderType,
-      Merchant: order.merchant,
-      "Reference No": order.refNumber,
-      Amount: order.amount,
-      "Airway Bills Copy": order.airwayBillsCopy,
-      Items: order.items,
-      Weight: order.weight,
-      "Customer Name": order.customer?.name,
-      "Customer Contact": order.customer?.contactNumber,
-      "Delivery City": order.customer?.deliverCity,
-      "Delivery Address": order.customer?.deliveryAddress,
-      "Pickup City": order.shipperInfo?.pickupCity,
-      "Pickup Address": order.shipperInfo?.pickupAddress,
-      "Return City": order.shipperInfo?.returnCity,
-      "Return Address": order.shipperInfo?.returnAddress,
-      "Shipper Mobile": order.shipperInfo?.mobile,
-      "Order Detail": order.orderDetail,
-      Notes: order.notes,
-      Status: order.status,
-      "Created At": new Date(order.createdAt).toLocaleString(),
-    }))
-  );
+    // Convert selectedRows to worksheet
+    const worksheet = XLSX.utils.json_to_sheet(
+      selectedRows.map((order) => ({
+        "Order Number": order.orderNumber,
+        "Order Type": order.orderType,
+        Merchant: order.merchant,
+        "Reference No": order.refNumber,
+        Amount: order.amount,
+        "Airway Bills Copy": order.airwayBillsCopy,
+        Items: order.items,
+        Weight: order.weight,
+        "Customer Name": order.customer?.name,
+        "Customer Contact": order.customer?.contactNumber,
+        "Delivery City": order.customer?.deliverCity,
+        "Delivery Address": order.customer?.deliveryAddress,
+        "Pickup City": order.shipperInfo?.pickupCity,
+        "Pickup Address": order.shipperInfo?.pickupAddress,
+        "Return City": order.shipperInfo?.returnCity,
+        "Return Address": order.shipperInfo?.returnAddress,
+        "Shipper Mobile": order.shipperInfo?.mobile,
+        "Order Detail": order.orderDetail,
+        Notes: order.notes,
+        Status: order.status,
+        "Created At": new Date(order.createdAt).toLocaleString(),
+      }))
+    );
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
 
-  XLSX.writeFile(workbook, "orders.xlsx");
-};
+    XLSX.writeFile(workbook, "orders.xlsx");
+
+    setSelectedRowKeys([]);
+    setSelectedRows([]);
+    setSearchValue("");
+    setStartDate(null);
+    setEndDate(null);
+    setSearchType("ORDER REF #");
+  };
   const columns = [
     {
       title: "Order Number",
