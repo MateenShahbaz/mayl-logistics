@@ -293,7 +293,6 @@ export default function OrderLog() {
       const defaultPickupOption = response.data.pickupaddress.find(
         (opt: any) => opt.default === true
       );
-      console.log(defaultPickupOption);
 
       const defaultReturnOption = response.data.returnaddress.find(
         (opt: any) => opt.default === true

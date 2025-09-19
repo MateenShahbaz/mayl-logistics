@@ -20,7 +20,7 @@ const OrderView = () => {
   };
   useEffect(() => {
     fetchDetails();
-  }, []);
+  }, [id]);
   return (
     <>
       <PageMeta

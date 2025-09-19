@@ -14,7 +14,7 @@ import { generatePDFForOrders } from "../../utils/generatePDF";
 import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
 import { Dropdown } from "../../components/ui/dropdown/Dropdown";
 import { MoreDotIcon } from "../../icons";
-
+import * as XLSX from "xlsx";
 const options = [
   { value: "all", label: "All" },
   { value: "booked", label: "Booked" },
@@ -29,16 +29,47 @@ const options = [
   { value: "damage", label: "Damage" },
 ];
 
-interface Order {
+export interface Order {
   _id: string;
   orderNumber: string;
-  orderType: string;
+  orderType: "normal" | "reversed" | "replacement" | "overland";
+  merchant?: string;
   refNumber: string;
   amount: number;
+  airwayBillsCopy: number;
   items: number;
   weight: number;
-  status: string;
+  customer: {
+    name: string;
+    contactNumber: string;
+    deliverCity: string;
+    deliveryAddress: string;
+  };
+  shipperInfo: {
+    pickupCity: string;
+    pickupAddress: string;
+    returnCity: string;
+    returnAddress: string;
+    mobile: string;
+  };
+  orderDetail?: string;
+  notes?: string;
+  status:
+    | "booked"
+    | "unbooked"
+    | "inTransit"
+    | "delivered"
+    | "returned"
+    | "cancelled"
+    | "expired"
+    | "lost"
+    | "stolen"
+    | "damage";
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
 }
+
 
 type BadgeColor =
   | "primary"
@@ -184,6 +215,45 @@ export default function AirwayBills() {
     setEndDate(null);
     setSearchType("ORDER REF #");
   };
+
+const generateExcelSheet = async () => {
+  if (selectedRows.length === 0) {
+    errorToast("No orders selected");
+    return;
+  }
+
+  // Convert selectedRows to worksheet
+  const worksheet = XLSX.utils.json_to_sheet(
+    selectedRows.map((order) => ({
+      "Order Number": order.orderNumber,
+      "Order Type": order.orderType,
+      Merchant: order.merchant,
+      "Reference No": order.refNumber,
+      Amount: order.amount,
+      "Airway Bills Copy": order.airwayBillsCopy,
+      Items: order.items,
+      Weight: order.weight,
+      "Customer Name": order.customer?.name,
+      "Customer Contact": order.customer?.contactNumber,
+      "Delivery City": order.customer?.deliverCity,
+      "Delivery Address": order.customer?.deliveryAddress,
+      "Pickup City": order.shipperInfo?.pickupCity,
+      "Pickup Address": order.shipperInfo?.pickupAddress,
+      "Return City": order.shipperInfo?.returnCity,
+      "Return Address": order.shipperInfo?.returnAddress,
+      "Shipper Mobile": order.shipperInfo?.mobile,
+      "Order Detail": order.orderDetail,
+      Notes: order.notes,
+      Status: order.status,
+      "Created At": new Date(order.createdAt).toLocaleString(),
+    }))
+  );
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
+
+  XLSX.writeFile(workbook, "orders.xlsx");
+};
   const columns = [
     {
       title: "Order Number",
@@ -279,6 +349,12 @@ export default function AirwayBills() {
               <div>
                 <Button onClick={generateAirwayBills}>
                   Generate Print ({selectedRowKeys.length})
+                </Button>
+              </div>
+
+              <div>
+                <Button onClick={generateExcelSheet}>
+                  Export Excel ({selectedRowKeys.length})
                 </Button>
               </div>
             </div>
