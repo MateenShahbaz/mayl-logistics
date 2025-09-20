@@ -13,6 +13,7 @@ import { generateLoadSheetPDF } from "../../utils/generatePDF";
 import { Modal } from "../../components/ui/modal";
 import { useModal } from "../../hooks/useModal";
 import Input from "../../components/form/input/InputField";
+import { allowOnlyNumbers } from "../../utils/inputValidation";
 
 interface Order {
   _id: string;
@@ -542,6 +543,7 @@ export default function LoadSheet() {
                     placeholder="Rider Employee Code"
                     value={formData.employeeCode}
                     onChange={handleChange}
+                    onKeyDown={allowOnlyNumbers}
                     required
                   />
                 </div>

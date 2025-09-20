@@ -134,9 +134,15 @@ const BulkBooking: React.FC = () => {
             }
           }
 
+          let phone = String(row["Customer Phone"]).trim();
+          if (phone.startsWith("3")) {
+            phone = "0" + phone;
+          }
+
           return {
             key: index,
             ...row,
+            "Customer Phone": phone,
             "Order Type": orderTypeValue,
             status: errors.length > 0 ? `❌ ${errors.join(", ")}` : "✅ Valid",
           } as OrderRow;

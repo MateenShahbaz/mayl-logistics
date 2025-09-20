@@ -39,7 +39,7 @@ const AuthSchema = new mongoose.Schema(
       required: false,
     },
     accountNumber: {
-      type: Number,
+      type: String,
       required: false,
     },
     accountName: {

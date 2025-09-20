@@ -17,6 +17,7 @@ import { Dropdown } from "../../components/ui/dropdown/Dropdown";
 import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
 import { generatePDF } from "../../utils/generatePDF";
 import { useAuth } from "../../context/AuthContext";
+import { allowOnlyNumbers } from "../../utils/inputValidation";
 
 interface Order {
   _id: string;
@@ -627,6 +628,7 @@ const Order = () => {
                         )
                       }
                       required
+                      onKeyDown={allowOnlyNumbers}
                       placeholder="03XXXXXXXXX"
                     />
                   </div>

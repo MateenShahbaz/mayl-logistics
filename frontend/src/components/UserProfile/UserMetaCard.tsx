@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { apiCaller } from "../../core/API/ApiServices";
 import { errorToast, successToast } from "../../core/core-index";
 import { useAuth } from "../../context/AuthContext";
+import { allowOnlyNumbers } from "../../utils/inputValidation";
 interface User {
   _id: string;
   firstName: string;
@@ -255,6 +256,7 @@ export default function UserMetaCard({ user }: Props) {
                         type="text"
                         value={formData.accountNumber || ""}
                         onChange={handleChange}
+                        onKeyDown={allowOnlyNumbers}
                         required
                       />
                     </div>

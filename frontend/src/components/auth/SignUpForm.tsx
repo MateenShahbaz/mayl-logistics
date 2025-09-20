@@ -6,6 +6,7 @@ import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import { errorToast } from "../../core/core-index";
 import { apiCaller } from "../../core/API/ApiServices";
+import { allowOnlyNumbers } from "../../utils/inputValidation";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -145,12 +146,13 @@ export default function SignUpForm() {
                       Mobile Number<span className="text-error-500">*</span>
                     </Label>
                     <Input
-                      type="number"
+                      type="text"
                       id="phone"
                       name="phone"
                       placeholder="Enter your mobile number"
                       value={formData.phone}
                       onChange={handleChange}
+                      onKeyDown={allowOnlyNumbers}
                       required
                     />
                   </div>

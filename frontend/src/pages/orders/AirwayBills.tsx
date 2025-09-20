@@ -212,7 +212,7 @@ export default function AirwayBills() {
     setSearchValue("");
     setStartDate(null);
     setEndDate(null);
-    setSearchType("ORDER REF #");
+    setSearchType("ORDER Ref #");
   };
 
   const generateExcelSheet = async () => {
@@ -258,7 +258,7 @@ export default function AirwayBills() {
     setSearchValue("");
     setStartDate(null);
     setEndDate(null);
-    setSearchType("ORDER REF #");
+    setSearchType("ORDER Ref #");
   };
   const columns = [
     {
