@@ -9,9 +9,16 @@ const LoadSheetSchema = new mongoose.Schema(
     },
     orders: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Order",
-        required: true,
+        orderId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Order",
+          required: true,
+        },
+        status: {
+          type: String,
+          enum: ["unpicked", "picked"],
+          default: "unpicked",
+        },
       },
     ],
     status: {

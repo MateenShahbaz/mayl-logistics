@@ -94,9 +94,14 @@ exports.add = async (req, res) => {
     }
     const loadsheetNumber = await generateLoadsheetNumber(user);
 
+    const formattedOrders = orders.map((id) => ({
+      orderId: id,
+      status: "unpicked",
+    }));
+
     const loadSheet = new loadSheetModel({
       loadsheetNumber,
-      orders,
+      orders: formattedOrders,
       rider,
       userId: user.id,
       status: "new",
@@ -148,8 +153,11 @@ exports.list = async (req, res) => {
 
     const formattedLoadSheets = loadSheets.map((ls) => {
       const totalOrders = ls.orders?.length || 0;
-      const pickedOrders = 0;
-      const unpickedOrders = ls.orders?.length || 0;
+
+      const pickedOrders =
+        ls.orders?.filter((o) => o.status === "picked").length || 0;
+
+      const unpickedOrders = totalOrders - pickedOrders;
 
       return {
         id: ls._id.toString(),
@@ -181,7 +189,10 @@ exports.getOrderById = async (req, res) => {
     const loadSheet = await loadSheetModel
       .findOne({ _id: id, userId: user.id })
       .select("orders")
-      .populate("orders", "orderNumber refNumber amount customer createdAt");
+      .populate(
+        "orders.orderId",
+        "orderNumber refNumber amount customer createdAt"
+      );
 
     if (!loadSheet) {
       return response.error_message({ message: "LoadSheet not found" }, res);

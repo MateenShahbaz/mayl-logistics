@@ -462,15 +462,13 @@ export default function LogSheet() {
         </div>
       </div>
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[750px] m-4">
-        <div className="no-scrollbar relative w-full max-w-[750px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[800px] m-4">
+        <div className="no-scrollbar relative w-full max-w-[800px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
               Total Orders
             </h4>
           </div>
-          {/* <form className="flex flex-col"> */}
-          {/* <div className="custom-scrollbar h-auto overflow-y-auto px-2 pb-3"> */}
           <table className="w-full border-collapse border border-gray-300 text-sm">
             <thead className="bg-gray-100">
               <tr>
@@ -495,30 +493,40 @@ export default function LogSheet() {
                 <th className="border border-gray-300 px-3 py-2 text-left">
                   Invoice Amount
                 </th>
+                <th className="border border-gray-300 px-3 py-2 text-left">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody>
               {orders.length > 0 ? (
-                orders.map((order: any, index: any) => (
+                orders.map((order: any, index: number) => (
                   <tr key={order._id} className="hover:bg-gray-50">
                     <td className="border border-gray-300 px-3 py-2">
                       {index + 1}
                     </td>
                     <td className="border border-gray-300 px-3 py-2">
-                      {order.orderNumber}
+                      {order.orderId.orderNumber}
                     </td>
                     <td className="border border-gray-300 px-3 py-2">
-                      {order.refNumber}
+                      {order.orderId.refNumber}
                     </td>
                     <td className="border border-gray-300 px-3 py-2">
-                      {order.customer?.name} - {order.customer?.contactNumber}
+                      {order.orderId.customer?.name} -{" "}
+                      {order.orderId.customer?.contactNumber}
                     </td>
                     <td className="border border-gray-300 px-3 py-2">
-                      {new Date(order.createdAt).toLocaleDateString()}
+                      {new Date(order.orderId.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2">Lahore</td>
                     <td className="border border-gray-300 px-3 py-2">
-                      {order.amount?.toFixed(2)}
+                      {order.orderId.customer?.deliverCity}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {order.orderId.amount?.toFixed(2)}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {/* ✅ show picked/unpicked */}
+                      {order.status}
                     </td>
                   </tr>
                 ))
@@ -526,7 +534,7 @@ export default function LogSheet() {
                 <tr>
                   <td
                     className="border border-gray-300 px-3 py-4 text-center"
-                    colSpan={7}
+                    colSpan={8}
                   >
                     No Orders Found
                   </td>
