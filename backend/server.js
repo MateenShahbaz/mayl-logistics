@@ -59,3 +59,6 @@ app.use("/order", jwtauth, orderRoutes);
 
 const loadSheetRoutes = require("./api/loadSheet/routes/loadSheet.route");
 app.use("/loadSheet", jwtauth, loadSheetRoutes);
+
+const orderHistory = require("./api/shippmentArrives/routes/trackHistory.route");
+app.use("/history", jwtauth, orderHistory);

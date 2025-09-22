@@ -36,6 +36,11 @@ const OrderSchema = new mongoose.Schema(
       required: false,
       default: 0,
     },
+    actualWeight: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
     customer: {
       name: {
         type: String,
@@ -90,6 +95,7 @@ const OrderSchema = new mongoose.Schema(
       enum: [
         "booked",
         "unbooked",
+        "arrived",
         "inTransit",
         "delivered",
         "returned",

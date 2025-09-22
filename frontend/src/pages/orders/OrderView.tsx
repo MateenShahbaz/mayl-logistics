@@ -125,7 +125,7 @@ const OrderView = () => {
                     Actual Weight
                   </p>
                   <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    N/A
+                    {orderData?.actualWeight || "N/A"}
                   </p>
                 </div>
 

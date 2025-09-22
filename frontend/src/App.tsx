@@ -22,6 +22,7 @@ import ProtectedRoute from "./utils/ProtectedRoute";
 import Processing from "./pages/AuthPages/Processing";
 import ViewShipper from "./pages/shippers/verifiedShipper/ViewShipper";
 import OrderView from "./pages/orders/OrderView";
+import ShippmentArrives from "./pages/MayllogisticsCalc/ShippmentArrives";
 
 export default function App() {
   return (
@@ -50,6 +51,9 @@ export default function App() {
           <Route path="/unverified" element={<UnVerifiedShipper />} />
           <Route path="/shipper-view/:id" element={<ViewShipper />} />
           <Route path="/order-view/:id" element={<OrderView />} />
+
+          {/* admin */}
+          <Route path="/shippment-arrives" element={<ShippmentArrives />} />
         </Route>
 
         {/* Public routes */}
