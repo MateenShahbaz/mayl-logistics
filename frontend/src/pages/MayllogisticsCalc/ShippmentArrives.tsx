@@ -55,14 +55,21 @@ const ShippmentArrives = () => {
     }
   };
 
-  const handleSave = () => {
-    setTableData([]);
+  const arrivedHistory = async () => {
+    if (courierId && startDate) {
+      const response = await apiCaller({
+        method: "POST",
+        url: `/history/arrived`,
+        data: {
+          courierId,
+          date: dayjs(startDate),
+        },
+      });
+      if (response.code === 200) {
+        setTableData(response.data.map((d: any) => ({ key: d._id, ...d })));
+      }
+    }
   };
-  // const handleClear = () => {
-  //   setCourierId("");
-  //   setTrackingNo("");
-  //   setWeight("");
-  // };
   const columns = [
     {
       title: "Order Number",
@@ -171,13 +178,13 @@ const ShippmentArrives = () => {
                         format="YYYY-MM-DD"
                         className="w-full h-11 rounded-lg border border-gray-200 shadow-theme-xs"
                         placeholder="Select Date"
-                        disabledDate={(current) => {
-                          return (
-                            current &&
-                            current.format("YYYY-MM-DD") !==
-                              dayjs().format("YYYY-MM-DD")
-                          );
-                        }}
+                        // disabledDate={(current) => {
+                        //   return (
+                        //     current &&
+                        //     current.format("YYYY-MM-DD") !==
+                        //       dayjs().format("YYYY-MM-DD")
+                        //   );
+                        // }}
                       />
                     </div>
 
@@ -192,6 +199,7 @@ const ShippmentArrives = () => {
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
+                            arrivedHistory();
                             trackingRef.current?.focus();
                           }
                         }}
@@ -226,23 +234,13 @@ const ShippmentArrives = () => {
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
-                            handleApiCall();
+                            if (parseFloat(weight) > 0) {
+                              handleApiCall();
+                            }
                           }
                         }}
                       />
                     </div>
-                  </div>
-                  <div className="my-4 flex justify-end gap-3">
-                    {/* <Button
-                      className=""
-                      variant="outline"
-                      onClick={handleClear}
-                    >
-                      Clear
-                    </Button> */}
-                    <Button onClick={handleSave} variant="primary">
-                      Save ({tableData.length})
-                    </Button>
                   </div>
                 </form>
 

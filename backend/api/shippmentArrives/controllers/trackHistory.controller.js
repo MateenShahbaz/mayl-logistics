@@ -91,7 +91,6 @@ exports.deleteShipmentArrives = async (req, res) => {
       );
     }
 
-    // find last "shipment arrive" history
     const lastHistory = await orderHistoryModel
       .findOne({
         orderId: order._id,
@@ -157,7 +156,7 @@ exports.deleteShipmentArrives = async (req, res) => {
 exports.trackOrderHistory = async (req, res) => {
   try {
     const { trackingNo } = req.body;
-    
+
     const order = await orderModel.findOne({ orderNumber: trackingNo });
     if (!order) {
       return response.data_error_message({ message: "Order not found" }, res);
@@ -186,6 +185,51 @@ exports.trackOrderHistory = async (req, res) => {
     return response.success_message(data, res);
   } catch (error) {
     console.error("Error tracking order history:", error.message);
+    return response.error_message(error.message, res);
+  }
+};
+
+exports.getArrivedByCourierAndDate = async (req, res) => {
+  try {
+    const { date, courierId } = req.body;
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const histories = await orderHistoryModel
+      .find({
+        courierId,
+        newStatus: "shipment arrive",
+        createdAt: { $gte: startOfDay, $lte: endOfDay },
+        isDelete: false,
+      })
+      .populate({
+        path: "orderId",
+        populate: [{ path: "customer" }, { path: "merchant" }],
+      });
+
+    if (!histories.length) {
+      return response.data_error_message(
+        { message: "No shipments found for this courier on given date" },
+        res
+      );
+    }
+
+    const data = histories.map((h) => ({
+      _id: h.orderId._id,
+      orderNumber: h.orderId.orderNumber,
+      customer: h.orderId.customer,
+      merchant: h.orderId.merchant,
+      actualWeight: h.orderId.actualWeight,
+      arrivedAt: h.createdAt,
+    }));
+
+    response.success_message(data, res);
+  } catch (error) {
+    console.log(error.message);
     return response.error_message(error.message, res);
   }
 };
