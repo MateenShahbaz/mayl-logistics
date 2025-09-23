@@ -2,10 +2,12 @@ const orderModel = require("../models/order.model");
 const response = require("../../../response");
 const addressModel = require("../../address/models/address.model");
 const userModel = require("../../auth/models/auth.model");
+const orderHistoryModel = require("../../shippmentArrives/models/trackHistory.model");
 const mongoose = require("mongoose");
+
 exports.add = async (req, res) => {
   try {
-    const { shipperNumber, id } = req.user;
+    const { shipperNumber, id, merchant } = req.user;
     const defaultPickup = await addressModel.findOne({
       default: true,
       userId: id,
@@ -60,6 +62,16 @@ exports.add = async (req, res) => {
       userId: id,
     });
 
+    await orderHistoryModel.create({
+      orderId: newOrder._id,
+      previousStatus: "",
+      newStatus: "unbooked",
+      message: `Parcel at ${merchant}`,
+      courierId: "",
+      visibleToShipper: true,
+      isDelete: false,
+    });
+
     response.success_message(newOrder, res);
   } catch (error) {
     console.log(error.message);
@@ -99,8 +111,12 @@ exports.view = async (req, res) => {
       );
     }
     const order = await orderModel.findById(id);
-
-    response.success_message(order, res);
+    const orderHistory = await orderHistoryModel.find({
+      orderId: id,
+      visibleToShipper: true,
+      isDelete: false,
+    });
+    response.success_message({ order, orderHistory }, res);
   } catch (error) {
     console.log(error.message);
     return response.error_message(error.message, res);
@@ -168,7 +184,7 @@ exports.trackOrder = async (req, res) => {
 
 exports.excelUpload = async (req, res) => {
   try {
-    const { shipperNumber, id } = req.user;
+    const { shipperNumber, id, merchant } = req.user;
     const user = await userModel.findById(id);
     const request = req.body;
 
@@ -255,6 +271,18 @@ exports.excelUpload = async (req, res) => {
 
     // Insert into DB
     const createdOrders = await orderModel.insertMany(ordersToInsert);
+
+    const histories = createdOrders.map((order) => ({
+      orderId: order._id,
+      previousStatus: "",
+      newStatus: "unbooked",
+      message: `Parcel at ${merchant}`,
+      courierId: "",
+      visibleToShipper: true,
+      isDelete: false,
+    }));
+
+    await orderHistoryModel.insertMany(histories);
 
     return response.success_message(createdOrders, res);
   } catch (error) {

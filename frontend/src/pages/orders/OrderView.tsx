@@ -4,9 +4,39 @@ import { apiCaller } from "../../core/API/ApiServices";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Badge from "../../components/ui/badge/Badge";
+import dayjs from "dayjs";
+import { FaBoxOpen } from "react-icons/fa";
+import { MdLocalShipping } from "react-icons/md";
+import { FaWarehouse } from "react-icons/fa6";
 
 const OrderView = () => {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "unbooked":
+        return <FaBoxOpen size={40} className="text-blue-600" />;
+      case "shipment arrive":
+        return <FaWarehouse size={40} className="text-orange-500" />;
+      case "shipment picked":
+        return <MdLocalShipping size={40} className="text-yellow-500" />;
+      // case "delivered":
+      //   return <PackageCheck size={22} className="text-green-600" />;
+      default:
+        return <FaBoxOpen size={22} className="text-gray-400" />;
+    }
+  };
+
+const formatMessage = (msg?: string) => {
+  if (!msg) return "";
+  const words = msg.trim().split(/\s+/);
+  let lines: string[] = [];
+  for (let i = 0; i < words.length; i += 3) {
+    lines.push(words.slice(i, i + 3).join(" "));
+  }
+  return lines.join("\n");
+};
+
   const [orderData, setOrderData] = useState<any>({});
+  const [orderHistory, setorderHistory] = useState<any>([]);
   const { id } = useParams();
 
   const fetchDetails = async () => {
@@ -15,7 +45,8 @@ const OrderView = () => {
       url: `/order/view/${id}`,
     });
     if (response.code === 200) {
-      setOrderData(response.data);
+      setOrderData(response.data.order);
+      setorderHistory(response.data.orderHistory);
     }
   };
   useEffect(() => {
@@ -107,7 +138,7 @@ const OrderView = () => {
                     Invoice Date
                   </p>
                   <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    {orderData?.createdAt}
+                    {dayjs(orderData?.createdAt).format("DD MMM YYYY h:mm A")}
                   </p>
                 </div>
 
@@ -211,6 +242,43 @@ const OrderView = () => {
                     {orderData?.customer?.deliveryAddress}
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6 mt-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between ">
+            <div>
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
+                Order History
+              </h4>
+              <div className="flex space-x-4 gap-6 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 p-2">
+                {orderHistory?.length > 0 ? (
+                  orderHistory.map((history: any) => (
+                    <div
+                      key={history._id}
+                      className="flex flex-col items-center gap-4 border-b border-gray-100 pb-3"
+                    >
+                      <div className="flex-shrink-0">
+                        {getStatusIcon(history.newStatus)}
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white/90 whitespace-pre-line">
+                          {formatMessage(history.message)}
+                        </p>
+                        <p className="text-xs text-center text-gray-500 mt-2">
+                          {dayjs(history.createdAt).format(
+                            "DD MMM YYYY, h:mm A"
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No history available</p>
+                )}
               </div>
             </div>
           </div>

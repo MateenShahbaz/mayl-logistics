@@ -1,7 +1,7 @@
 const response = require("../../../response");
 const orderModel = require("../../orders/models/order.model");
 const loadSheetModel = require("../models/loadSheet.model");
-
+const orderHistoryModel = require("../../shippmentArrives/models/trackHistory.model");
 const generateLoadsheetNumber = async (user) => {
   const lastSheet = await loadSheetModel.findOne({ userId: user.id }).sort({
     createdAt: -1,
@@ -114,6 +114,18 @@ exports.add = async (req, res) => {
       { $set: { status: "booked" } }
     );
 
+    const histories = orders.map((orderId) => ({
+      orderId,
+      previousStatus: "unbooked",
+      newStatus: "shipment picked",
+      message: `Parcel enroute to Mayl Logistics weahouse`,
+      courierId: "",
+      visibleToShipper: true,
+      isDelete: false,
+    }));
+
+    await orderHistoryModel.insertMany(histories);
+
     return response.success_message(
       {
         loadsheetNumber: loadSheet.loadsheetNumber,
@@ -158,11 +170,15 @@ exports.list = async (req, res) => {
         ls.orders?.filter((o) => o.status === "picked").length || 0;
 
       const unpickedOrders = totalOrders - pickedOrders;
+      let loadSheetStatus = ls.status;
+      if (totalOrders > 0 && pickedOrders === totalOrders) {
+        loadSheetStatus = "picked";
+      }
 
       return {
         id: ls._id.toString(),
         loadsheetNumber: ls.loadsheetNumber,
-        status: ls.status,
+        status: loadSheetStatus,
         createdAt: ls.createdAt,
         rider: ls.rider,
         totalOrders,

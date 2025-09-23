@@ -23,6 +23,7 @@ import Processing from "./pages/AuthPages/Processing";
 import ViewShipper from "./pages/shippers/verifiedShipper/ViewShipper";
 import OrderView from "./pages/orders/OrderView";
 import ShippmentArrives from "./pages/MayllogisticsCalc/ShippmentArrives";
+import Utilities from "./pages/MayllogisticsCalc/Utilities";
 
 export default function App() {
   return (
@@ -54,6 +55,7 @@ export default function App() {
 
           {/* admin */}
           <Route path="/shippment-arrives" element={<ShippmentArrives />} />
+          <Route path="/utilities" element={<Utilities />} />
         </Route>
 
         {/* Public routes */}

@@ -54,7 +54,10 @@ const navItems: NavItem[] = [
   {
     icon: <FileIcon />,
     name: "Mayl logistics Calc",
-    subItems: [{ name: "Shippment Arrives", path: "/shippment-arrives", pro: false }],
+    subItems: [
+      { name: "Shippment Arrives", path: "/shippment-arrives", pro: false },
+      { name: "Utilities", path: "/utilities", pro: false },
+    ],
   },
   { icon: <UserCircleIcon />, name: "User Profile", path: "/profile" },
 ];

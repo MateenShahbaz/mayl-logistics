@@ -8,6 +8,7 @@ import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import dayjs from "dayjs";
 import { apiCaller } from "../../core/API/ApiServices";
+import { successToast } from "../../core/core-index";
 
 const options = [{ value: "lahore", label: "Lahore" }];
 const ShippmentArrives = () => {
@@ -42,6 +43,26 @@ const ShippmentArrives = () => {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    const response = await apiCaller({
+      method: "PUT",
+      url: `/history/shippment-delete/${id}`,
+    });
+
+    if (response.code === 200) {
+      successToast("Deleted successfully");
+      setTableData((prev) => prev.filter((item) => item._id !== id));
+    }
+  };
+
+  const handleSave = () => {
+    setTableData([]);
+  };
+  // const handleClear = () => {
+  //   setCourierId("");
+  //   setTrackingNo("");
+  //   setWeight("");
+  // };
   const columns = [
     {
       title: "Order Number",
@@ -77,6 +98,35 @@ const ShippmentArrives = () => {
       title: "Actual Weight",
       dataIndex: "actualWeight",
       key: "actualWeight",
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_: any, record: any) => (
+        <div className="flex gap-1">
+          <Button
+            variant="outline"
+            onClick={() => handleDelete(record._id as string)}
+            className="flex items-center gap-1 text-red-600 p-1"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+            {/* Delete */}
+          </Button>
+        </div>
+      ),
     },
   ];
   return (
@@ -135,7 +185,7 @@ const ShippmentArrives = () => {
                       <Label>Courier Id</Label>
                       <Input
                         ref={courierRef}
-                        defaultValue={courierId}
+                        value={courierId}
                         onChange={(e) => setCourierId(e.target.value)}
                         type="text"
                         placeholder="Enter Courier Id"
@@ -183,15 +233,15 @@ const ShippmentArrives = () => {
                     </div>
                   </div>
                   <div className="my-4 flex justify-end gap-3">
-                    <Button
+                    {/* <Button
                       className=""
                       variant="outline"
-                      // onClick={handleClear}
+                      onClick={handleClear}
                     >
                       Clear
-                    </Button>
-                    <Button type="submit" variant="primary">
-                      Save
+                    </Button> */}
+                    <Button onClick={handleSave} variant="primary">
+                      Save ({tableData.length})
                     </Button>
                   </div>
                 </form>
