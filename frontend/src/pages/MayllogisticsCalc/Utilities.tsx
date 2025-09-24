@@ -167,7 +167,10 @@ const Utilities = () => {
                     <tr>
                       <th className="border px-3 py-2">S.No</th>
                       <th className="border px-3 py-2">New Status</th>
+                      <th className="border px-3 py-2">Entered By</th>
                       <th className="border px-3 py-2">Date</th>
+                      <th className="border px-3 py-2">Home Branch</th>
+                      <th className="border px-3 py-2">Dest Branch</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -176,6 +179,7 @@ const Utilities = () => {
                         <tr key={h.id} className="hover:bg-gray-50">
                           <td className="border px-3 py-2">{index + 1}</td>
                           <td className="border px-3 py-2">{h.newStatus}</td>
+                          <td className="border px-3 py-2">{h?.createdBy?.shipperNumber}-{h?.createdBy?.firstName}  ({h?.createdBy?.role})</td>
                           <td className="border px-3 py-2">
                             {new Date(h.createdAt).toLocaleString("en-GB", {
                               day: "2-digit",
@@ -185,6 +189,8 @@ const Utilities = () => {
                               minute: "2-digit",
                             })}
                           </td>
+                          <td className="border px-3 py-2">LHE</td>
+                          <td className="border px-3 py-2">LHE</td>
                         </tr>
                       ))
                     ) : (

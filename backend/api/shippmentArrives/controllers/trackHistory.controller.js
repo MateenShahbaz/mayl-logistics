@@ -57,6 +57,7 @@ exports.shippmentArrives = async (req, res) => {
       courierId,
       visibleToShipper: true,
       isDelete: false,
+      createdBy: req.user.id,
     });
 
     const data = {
@@ -141,6 +142,7 @@ exports.deleteShipmentArrives = async (req, res) => {
       courierId: "",
       visibleToShipper: false,
       isDelete: false,
+      createdBy: req.user.id,
     });
 
     response.success_message(
@@ -162,7 +164,10 @@ exports.trackOrderHistory = async (req, res) => {
       return response.data_error_message({ message: "Order not found" }, res);
     }
 
-    const history = await orderHistoryModel.find({ orderId: order._id }).lean();
+    const history = await orderHistoryModel
+      .find({ orderId: order._id })
+      .populate("createdBy", "firstName shipperNumber role")
+      .lean();
 
     const data = {
       ...order,
@@ -175,6 +180,7 @@ exports.trackOrderHistory = async (req, res) => {
         visibleToShipper: h.visibleToShipper,
         createdAt: h.createdAt,
         isDelete: h.isDelete,
+        createdBy: h.createdBy,
       })),
     };
 

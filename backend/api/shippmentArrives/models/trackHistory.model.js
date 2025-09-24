@@ -15,6 +15,12 @@ const OrderHistorySchema = new mongoose.Schema(
     },
     visibleToShipper: { type: Boolean, default: false },
     isDelete: { type: Boolean, default: false },
+    createdBy: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+      required: false,
+      default: null,
+    },
   },
   { timestamps: true }
 );

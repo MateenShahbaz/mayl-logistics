@@ -70,6 +70,7 @@ exports.add = async (req, res) => {
       courierId: "",
       visibleToShipper: true,
       isDelete: false,
+      createdBy: req.user.id,
     });
 
     response.success_message(newOrder, res);
@@ -280,6 +281,7 @@ exports.excelUpload = async (req, res) => {
       courierId: "",
       visibleToShipper: true,
       isDelete: false,
+      createdBy: req.user.id,
     }));
 
     await orderHistoryModel.insertMany(histories);

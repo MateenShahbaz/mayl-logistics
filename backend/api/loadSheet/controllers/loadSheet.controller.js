@@ -122,6 +122,7 @@ exports.add = async (req, res) => {
       courierId: "",
       visibleToShipper: true,
       isDelete: false,
+      createdBy: req.user.id
     }));
 
     await orderHistoryModel.insertMany(histories);
