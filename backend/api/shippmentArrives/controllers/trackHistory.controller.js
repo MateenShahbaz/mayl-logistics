@@ -157,7 +157,7 @@ exports.trackOrderHistory = async (req, res) => {
   try {
     const { trackingNo } = req.body;
 
-    const order = await orderModel.findOne({ orderNumber: trackingNo });
+    const order = await orderModel.findOne({ orderNumber: trackingNo }).lean();
     if (!order) {
       return response.data_error_message({ message: "Order not found" }, res);
     }
@@ -165,11 +165,7 @@ exports.trackOrderHistory = async (req, res) => {
     const history = await orderHistoryModel.find({ orderId: order._id }).lean();
 
     const data = {
-      _id: order._id,
-      orderNumber: order.orderNumber,
-      customer: order.customer,
-      merchant: order.merchant,
-      currentStatus: order.status,
+      ...order,
       history: history.map((h) => ({
         id: h._id,
         previousStatus: h.previousStatus,

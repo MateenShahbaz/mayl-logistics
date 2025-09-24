@@ -244,12 +244,20 @@ const ShippmentArrives = () => {
                   </div>
                 </form>
 
-                <Table
-                  columns={columns}
-                  dataSource={tableData}
-                  pagination={false}
-                  className="mt-6"
-                />
+                <div className="mt-6">
+                  <div className="mb-2 text-sm text-gray-600">
+                    Showing {tableData.length}{" "}
+                    {tableData.length === 1 ? "entry" : "entries"}
+                  </div>
+
+                  <Table
+                    columns={columns}
+                    dataSource={tableData}
+                    pagination={false} 
+                    className="mt-2"
+                    rowKey="_id"
+                  />
+                </div>
               </div>
             </div>
           </div>
