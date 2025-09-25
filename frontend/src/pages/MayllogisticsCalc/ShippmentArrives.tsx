@@ -8,7 +8,7 @@ import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import dayjs from "dayjs";
 import { apiCaller } from "../../core/API/ApiServices";
-import { successToast } from "../../core/core-index";
+import { errorToast, successToast } from "../../core/core-index";
 
 const options = [{ value: "lahore", label: "Lahore" }];
 const ShippmentArrives = () => {
@@ -24,6 +24,10 @@ const ShippmentArrives = () => {
   const weightRef = useRef<HTMLInputElement>(null);
 
   const handleApiCall = async () => {
+    if (!courierId || !trackingNo || !weight || !status) {
+      errorToast("All fields are  required for shipment arrive");
+      return;
+    }
     const data = {
       courierId,
       trackingNo,
@@ -56,6 +60,10 @@ const ShippmentArrives = () => {
   };
 
   const arrivedHistory = async () => {
+    if (!status) {
+      errorToast("Select an branch name");
+      return;
+    }
     if (courierId && startDate) {
       const response = await apiCaller({
         method: "POST",
@@ -65,6 +73,7 @@ const ShippmentArrives = () => {
           date: dayjs(startDate),
         },
       });
+      trackingRef.current?.focus();
       if (response.code === 200) {
         setTableData(response.data.map((d: any) => ({ key: d._id, ...d })));
       }
@@ -200,7 +209,6 @@ const ShippmentArrives = () => {
                           if (e.key === "Enter") {
                             e.preventDefault();
                             arrivedHistory();
-                            trackingRef.current?.focus();
                           }
                         }}
                       />
@@ -253,7 +261,7 @@ const ShippmentArrives = () => {
                   <Table
                     columns={columns}
                     dataSource={tableData}
-                    pagination={false} 
+                    pagination={false}
                     className="mt-2"
                     rowKey="_id"
                   />
