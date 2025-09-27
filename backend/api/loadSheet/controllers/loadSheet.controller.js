@@ -122,7 +122,7 @@ exports.add = async (req, res) => {
       courierId: "",
       visibleToShipper: true,
       isDelete: false,
-      createdBy: req.user.id
+      createdBy: req.user.id,
     }));
 
     await orderHistoryModel.insertMany(histories);
@@ -165,15 +165,25 @@ exports.list = async (req, res) => {
       .lean();
 
     const formattedLoadSheets = loadSheets.map((ls) => {
-      const totalOrders = ls.orders?.length || 0;
+      let totalOrders = ls.orders?.length || 0;
 
-      const pickedOrders =
+      let pickedOrders =
         ls.orders?.filter((o) => o.status === "picked").length || 0;
 
-      const unpickedOrders = totalOrders - pickedOrders;
+      let unpickedOrders = totalOrders - pickedOrders;
       let loadSheetStatus = ls.status;
-      if (totalOrders > 0 && pickedOrders === totalOrders) {
-        loadSheetStatus = "picked";
+      // if (loadSheetStatus !== "cancel") {
+      //   if (totalOrders > 0 && pickedOrders === totalOrders) {
+      //     loadSheetStatus = "picked";
+      //   }
+      // }
+      if (loadSheetStatus === "cancel") {
+        pickedOrders = 0;
+        unpickedOrders = totalOrders;
+      } else {
+        if (totalOrders > 0 && pickedOrders === totalOrders) {
+          loadSheetStatus = "picked";
+        }
       }
 
       return {
@@ -229,10 +239,11 @@ exports.printLoadSheet = async (req, res) => {
 
     const loadSheet = await loadSheetModel
       .findOne({ _id: id, userId: user.id })
-      .populate(
-        "orders",
-        "orderNumber refNumber amount customer merchant shipperInfo createdAt"
-      );
+      .populate({
+        path: "orders.orderId",
+        select:
+          "orderNumber refNumber amount customer merchant shipperInfo createdAt",
+      });
 
     if (!loadSheet) {
       return response.error_message({ message: "LoadSheet not found" }, res);
@@ -250,18 +261,66 @@ exports.updateLoadSheetStatus = async (req, res) => {
     const { id } = req.params;
     const user = req.user;
 
-    const loadSheet = await loadSheetModel.findOneAndUpdate(
-      { _id: id, userId: user.id },
-      { status: "cancel" },
-      { new: true, runValidators: true }
-    );
+    const loadSheet = await loadSheetModel.findOne({
+      _id: id,
+      userId: user.id,
+    });
 
     if (!loadSheet) {
       return response.error_message({ message: "LoadSheet not found" }, res);
     }
 
+    const orderIds = loadSheet.orders.map((o) => o.orderId);
+
+    const orders = await orderModel.find({ _id: { $in: orderIds } });
+
+    const invalidOrders = orders.filter((o) => o.status !== "booked");
+
+    if (invalidOrders.length > 0) {
+      return response.error_message(
+        {
+          message:
+            "LoadSheet cannot be cancelled because some orders are already processed.",
+        },
+        res
+      );
+    }
+
+    loadSheet.status = "cancel";
+    await loadSheet.save();
+
+    const bookedIds = orders.map((o) => o._id);
+
+    await orderModel.updateMany(
+      { _id: { $in: bookedIds } },
+      { $set: { status: "unbooked" } }
+    );
+
+    await orderHistoryModel.updateMany(
+      {
+        orderId: { $in: bookedIds },
+        newStatus: "shipment picked",
+        isDelete: false,
+      },
+      { $set: { isDelete: true } }
+    );
+
+    // Step 7: insert new histories for cancellation
+    const histories = bookedIds.map((orderId) => ({
+      orderId,
+      previousStatus: "booked",
+      newStatus: "unbooked",
+      message: `Loadsheet cancelled - Order moved back to unbooked`,
+      courierId: "",
+      visibleToShipper: false,
+      isDelete: false,
+      createdBy: req.user.id,
+    }));
+
+    await orderHistoryModel.insertMany(histories);
+
     return response.success_message(
-      { message: "Status updated successfully" },
+      { message: "Loadsheet cancelled, orders reverted successfully" },
       res
     );
   } catch (error) {

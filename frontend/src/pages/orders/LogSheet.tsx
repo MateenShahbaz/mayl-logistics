@@ -128,9 +128,9 @@ export default function LogSheet() {
       url: `/loadSheet/print/${id}`,
     });
     if (response.code === 200) {
-      const firstOrder = response.data.orders[0];
+      const firstOrder = response.data.orders[0].orderId;
       await generateLoadSheetPDF(
-        response.data.orders,
+        response.data.orders.map((o: any) => o.orderId),
         {
           shipperName: firstOrder.merchant,
           loadsheetNumber: response.data.loadsheetNumber,
