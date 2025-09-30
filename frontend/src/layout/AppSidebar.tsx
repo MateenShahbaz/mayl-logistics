@@ -57,6 +57,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Shippment Arrives", path: "/shippment-arrives", pro: false },
       { name: "Utilities", path: "/utilities", pro: false },
+      { name: "On Route", path: "/on-route", pro: false },
     ],
   },
   { icon: <UserCircleIcon />, name: "User Profile", path: "/profile" },

@@ -5,7 +5,7 @@ import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Badge from "../../components/ui/badge/Badge";
 import dayjs from "dayjs";
-import { FaBoxOpen } from "react-icons/fa";
+import { FaBoxOpen, FaTruck } from "react-icons/fa";
 import { MdLocalShipping } from "react-icons/md";
 import { FaWarehouse } from "react-icons/fa6";
 
@@ -16,6 +16,8 @@ const OrderView = () => {
         return <FaBoxOpen size={40} className="text-blue-600" />;
       case "shipment arrive":
         return <FaWarehouse size={40} className="text-orange-500" />;
+      case "out for delivery":
+        return <FaTruck size={40} className="text-blue-500" />;
       case "shipment picked":
         return <MdLocalShipping size={40} className="text-yellow-500" />;
       // case "delivered":
@@ -25,15 +27,15 @@ const OrderView = () => {
     }
   };
 
-const formatMessage = (msg?: string) => {
-  if (!msg) return "";
-  const words = msg.trim().split(/\s+/);
-  let lines: string[] = [];
-  for (let i = 0; i < words.length; i += 3) {
-    lines.push(words.slice(i, i + 3).join(" "));
-  }
-  return lines.join("\n");
-};
+  const formatMessage = (msg?: string) => {
+    if (!msg) return "";
+    const words = msg.trim().split(/\s+/);
+    let lines: string[] = [];
+    for (let i = 0; i < words.length; i += 3) {
+      lines.push(words.slice(i, i + 3).join(" "));
+    }
+    return lines.join("\n");
+  };
 
   const [orderData, setOrderData] = useState<any>({});
   const [orderHistory, setorderHistory] = useState<any>([]);

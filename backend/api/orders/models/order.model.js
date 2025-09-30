@@ -97,6 +97,7 @@ const OrderSchema = new mongoose.Schema(
         "unbooked",
         "arrived",
         "inTransit",
+        "out for delivery",
         "delivered",
         "returned",
         "cancelled",

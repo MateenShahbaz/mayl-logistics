@@ -24,6 +24,8 @@ import ViewShipper from "./pages/shippers/verifiedShipper/ViewShipper";
 import OrderView from "./pages/orders/OrderView";
 import ShippmentArrives from "./pages/MayllogisticsCalc/ShippmentArrives";
 import Utilities from "./pages/MayllogisticsCalc/Utilities";
+import OnRoute from "./pages/MayllogisticsCalc/OnRoute/OnRoute";
+import AddOnRoute from "./pages/MayllogisticsCalc/OnRoute/AddOnRoute";
 
 export default function App() {
   return (
@@ -56,6 +58,8 @@ export default function App() {
           {/* admin */}
           <Route path="/shippment-arrives" element={<ShippmentArrives />} />
           <Route path="/utilities" element={<Utilities />} />
+          <Route path="/on-route" element={<OnRoute />} />
+          <Route path="/add-on-route" element={<AddOnRoute />} />
         </Route>
 
         {/* Public routes */}

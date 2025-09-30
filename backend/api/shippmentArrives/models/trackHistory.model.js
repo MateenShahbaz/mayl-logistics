@@ -15,6 +15,7 @@ const OrderHistorySchema = new mongoose.Schema(
     },
     visibleToShipper: { type: Boolean, default: false },
     isDelete: { type: Boolean, default: false },
+    isForward: { type: Boolean, default: true },
     createdBy: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
