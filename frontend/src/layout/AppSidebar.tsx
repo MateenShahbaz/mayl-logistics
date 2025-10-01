@@ -60,6 +60,13 @@ const navItems: NavItem[] = [
       { name: "On Route", path: "/on-route", pro: false },
     ],
   },
+  {
+    icon: <FileIcon />,
+    name: "Debriefing",
+    subItems: [
+      { name: "Out for delivery", path: "/out-for-delivery", pro: false },
+    ],
+  },
   { icon: <UserCircleIcon />, name: "User Profile", path: "/profile" },
 ];
 
@@ -107,7 +114,8 @@ const AppSidebar: React.FC = () => {
           if (
             item.name === "Profiles" ||
             item.name === "User Profile" ||
-            item.name === "Mayl logistics Calc"
+            item.name === "Mayl logistics Calc" ||
+            item.name === "Debriefing"
           ) {
             return item;
           }

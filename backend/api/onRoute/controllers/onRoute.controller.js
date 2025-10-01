@@ -154,3 +154,40 @@ exports.list = async (req, res) => {
     response.error_message(error.message);
   }
 };
+
+exports.outForDeliveryList = async (req, res) => {
+  try {
+    const { selectDate, search, searchType } = req.query;
+    let query = {
+      type: "delivery",
+    };
+
+    if (search && searchType) {
+      switch (searchType) {
+        case "sheet no":
+          query.sheetNumber = { $regex: search, $options: "i" };
+          break;
+        case "courier id":
+          query.courierId = { $regex: search, $options: "i" };
+          break;
+      }
+    }
+
+    if (selectDate) {
+      const start = new Date(`${selectDate}T00:00:00.000Z`);
+      const end = new Date(`${selectDate}T23:59:59.999Z`);
+
+      query.createdAt = { $gte: start, $lte: end };
+    }
+
+    const lists = await onRouteModel
+      .find(query)
+      .select("sheetNumber type courierId orders createdAt status")
+      .lean();
+
+    response.success_message(lists, res);
+  } catch (error) {
+    console.log(error.message);
+    response.error_message(error.message);
+  }
+};

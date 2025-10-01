@@ -16,7 +16,7 @@ const onRouteSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ["new", "cancel"],
+      enum: ["new", "cancel", "close"],
       default: "new",
     },
     type: {
