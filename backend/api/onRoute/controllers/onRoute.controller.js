@@ -191,3 +191,21 @@ exports.outForDeliveryList = async (req, res) => {
     response.error_message(error.message);
   }
 };
+
+exports.view = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const onRoute = await onRouteModel
+      .findById(id)
+      .populate(
+        "orders",
+        "orderNumber orderType merchant refNumber amount customer"
+      )
+      .lean();
+
+    response.success_message(onRoute, res);
+  } catch (error) {
+    console.log(error.message);
+    response.error_message(error.message);
+  }
+};

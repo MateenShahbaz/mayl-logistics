@@ -46,7 +46,7 @@ const OutForDelivery = () => {
       dataIndex: "sheetNumber",
       key: "sheetNumber",
       render: (text: string, record: any) => {
-        return <Link to={`/order-view/${record._id}`}>#{text}</Link>;
+        return <Link to={`/view-delivery/${record._id}`}>#{text}</Link>;
       },
     },
     { title: "Courier ID", dataIndex: "courierId", key: "courierId" },
@@ -99,7 +99,7 @@ const OutForDelivery = () => {
       render: (_: any, record: any) => {
         return (
           <div className="relative inline-block">
-            <Button variant="ghost">View</Button>
+            <Button variant="outline"><Link to={`/view-delivery/${record._id}`}>View</Link></Button>
           </div>
         );
       },

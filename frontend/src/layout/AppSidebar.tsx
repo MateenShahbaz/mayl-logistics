@@ -96,7 +96,7 @@ const AppSidebar: React.FC = () => {
       .map((item) => {
         // SHIPPER: show everything except the "Profiles" and "Mayl logistics Calc"
         if (user?.role === "Shipper") {
-          if (item.name === "Profiles" || item.name === "Mayl logistics Calc")
+          if (item.name === "Profiles" || item.name === "Mayl logistics Calc" || item.name === "Debriefing")
             return null;
           return item;
         }
