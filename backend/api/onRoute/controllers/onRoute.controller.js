@@ -199,11 +199,98 @@ exports.view = async (req, res) => {
       .findById(id)
       .populate(
         "orders",
-        "orderNumber orderType merchant refNumber amount customer"
+        "orderNumber orderType merchant refNumber amount customer status"
       )
       .lean();
 
     response.success_message(onRoute, res);
+  } catch (error) {
+    console.log(error.message);
+    response.error_message(error.message);
+  }
+};
+
+exports.updateOrderStatuses = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { orderUpdates } = req.body;
+    const user = req.user;
+        
+    if (!Array.isArray(orderUpdates)) {
+      return response.data_error_message({ message: "Invalid payload" }, res);
+    }
+
+    for (let update of orderUpdates) {
+      if (!update.status) continue;
+
+      const order = await orderModel.findById(update.orderId);
+      if (!order) continue;
+
+      const prevStatus = order.status;
+
+      // ====== Status Mapping ======
+      let newStatus = update.status;
+      let message = "";
+      let isForward = true;
+
+      switch (update.status) {
+        case "delivered":
+          newStatus = "delivered";
+          message = "parcel is delivered";
+          break;
+
+        case "returned":
+          newStatus = "returned";
+          message = "parcel is delivered";
+          // isForward = false;
+          break;
+
+        case "shipper advice":
+          newStatus = "delivery underreview";
+          message = "delivery is under review";
+          break;
+
+        case "cna":
+          newStatus = "attempted";
+          message = "Attempt made : (consignee not available)";
+          break;
+
+        case "cne":
+          newStatus = "attempted";
+          message = "Attempt made : (connection not established)";
+          break;
+
+        case "ica":
+          newStatus = "attempted";
+          message = "Attempt made : (incomplete address)";
+          break;
+
+        default:
+          newStatus = update.status;
+          message = "";
+      }
+
+      await orderModel.findByIdAndUpdate(update.orderId, { status: newStatus });
+
+      const history = new historyModel({
+        orderId: update.orderId,
+        previousStatus: prevStatus,
+        newStatus: newStatus,
+        message: message,
+        courierId: "",
+        visibleToShipper: true,
+        isForward: isForward,
+        createdBy: user?.id,
+        isDelete: false,
+      });
+      await history.save();
+    }
+
+    const onRoute = await onRouteModel.findById(id);
+    onRoute.status = "close";
+    await onRoute.save();
+
+    response.success_message({ message: "Orders statuses is changeded" }, res);
   } catch (error) {
     console.log(error.message);
     response.error_message(error.message);

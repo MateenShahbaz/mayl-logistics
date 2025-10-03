@@ -1,8 +1,9 @@
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
 import { useEffect, useState } from "react";
 import { apiCaller } from "../../../core/API/ApiServices";
+import { errorToast, successToast } from "../../../core/core-index";
 
 interface OrderStatuses {
   [orderId: string]: string;
@@ -13,7 +14,7 @@ const ViewDelivery = () => {
   const [route, setRoute] = useState<any>(null);
   const [orderStatuses, setOrderStatuses] = useState<OrderStatuses>({});
   const [totalDelivered, setTotalDelivered] = useState(0);
-
+  const navigate = useNavigate();
   const fetchDetails = async () => {
     const response = await apiCaller({
       method: "GET",
@@ -50,14 +51,28 @@ const ViewDelivery = () => {
     setTotalDelivered(total);
   };
 
-  const handleSaveAll = () => {
-    const updates = Object.keys(orderStatuses)
-      .filter((id) => orderStatuses[id] !== "")
-      .map((orderId) => ({
-        orderId,
-        status: orderStatuses[orderId],
-      }));
-    console.log(updates);
+  const handleSaveAll = async () => {
+    const unselected = Object.values(orderStatuses).some((s) => s === "");
+
+    if (unselected) {
+      errorToast("Please update the status for all orders before saving.");
+      return;
+    }
+
+    const updates = Object.keys(orderStatuses).map((orderId) => ({
+      orderId,
+      status: orderStatuses[orderId],
+    }));
+
+    const response = await apiCaller({
+      method: "PUT",
+      url: `/onroute/update-status/${id}`,
+      data: { orderUpdates: updates },
+    });
+    if (response.code === 200) {
+      successToast("Statuses updated successfully");
+      navigate("/out-for-delivery");
+    }
   };
 
   return (
@@ -117,21 +132,29 @@ const ViewDelivery = () => {
                         {order?.amount?.toFixed(2)}
                       </td>
                       <td className="border px-3 py-2">
-                        <select
-                          className="border rounded px-2 py-1 text-sm w-full"
-                          value={orderStatuses[order?._id] || ""}
-                          onChange={(e) =>
-                            handleStatusChange(order?._id, e.target.value)
-                          }
-                        >
-                          <option value="">-- Select --</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="return">Return</option>
-                          <option value="shipper-advice">Shipper Advice</option>
-                          <option value="cna">CNA</option>
-                          <option value="cne">CNE</option>
-                          <option value="ica">ICA</option>
-                        </select>
+                        {route?.status !== "close" ? (
+                          <select
+                            className="border rounded px-2 py-1 text-sm w-full"
+                            value={orderStatuses[order?._id] || ""}
+                            onChange={(e) =>
+                              handleStatusChange(order?._id, e.target.value)
+                            }
+                          >
+                            <option value="">-- Select --</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="returned">Return</option>
+                            <option value="shipper advice">
+                              Shipper Advice
+                            </option>
+                            <option value="cna">CNA</option>
+                            <option value="cne">CNE</option>
+                            <option value="ica">ICA</option>
+                          </select>
+                        ) : (
+                          <span className="font-semibold text-green-600">
+                            {order?.status}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -146,20 +169,22 @@ const ViewDelivery = () => {
             </table>
 
             {/* Totals & Actions */}
-            <div className="mt-4 flex justify-between items-center">
-              <p className="font-semibold text-lg">
-                Total Delivered Amount:{" "}
-                <span className="text-green-600">
-                  {totalDelivered?.toFixed(2)}
-                </span>
-              </p>
-              <button
-                onClick={handleSaveAll}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition-colors"
-              >
-                Save All
-              </button>
-            </div>
+            {route?.status !== "close" && (
+              <div className="mt-4 flex justify-between items-center">
+                <p className="font-semibold text-lg">
+                  Total Delivered Amount:{" "}
+                  <span className="text-green-600">
+                    {totalDelivered?.toFixed(2)}
+                  </span>
+                </p>
+                <button
+                  onClick={handleSaveAll}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                >
+                  Save All
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -7,5 +7,6 @@ router.post("/add", OnRouteController.addDevlivery);
 router.get("/list", OnRouteController.list);
 router.get("/deliveryList", OnRouteController.outForDeliveryList);
 router.get("/view/:id", OnRouteController.view);
+router.put("/update-status/:id", OnRouteController.updateOrderStatuses);
 
 module.exports = router;

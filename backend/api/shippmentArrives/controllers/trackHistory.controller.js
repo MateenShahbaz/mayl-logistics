@@ -21,6 +21,7 @@ exports.shippmentArrives = async (req, res) => {
 
     const loadSheet = await loadSheetModel.findOne({
       "orders.orderId": order._id,
+      status: "new",
     });
 
     let lsOrder;

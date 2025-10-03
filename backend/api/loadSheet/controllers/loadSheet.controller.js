@@ -277,7 +277,7 @@ exports.updateLoadSheetStatus = async (req, res) => {
     const invalidOrders = orders.filter((o) => o.status !== "booked");
 
     if (invalidOrders.length > 0) {
-      return response.error_message(
+      return response.data_error_message(
         {
           message:
             "LoadSheet cannot be cancelled because some orders are already processed.",
