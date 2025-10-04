@@ -5,38 +5,43 @@ import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Badge from "../../components/ui/badge/Badge";
 import dayjs from "dayjs";
-import { FaBoxOpen, FaMapMarkerAlt, FaTruck, FaUndoAlt } from "react-icons/fa";
+import {
+  FaBoxOpen,
+  FaRedo,
+  FaTruck,
+  FaUndoAlt,
+} from "react-icons/fa";
 import { FaWarehouse } from "react-icons/fa6";
-import { MdLocalShipping, MdSignalWifiOff, MdPersonOff } from "react-icons/md";
+import { MdLocalShipping, MdPersonOff } from "react-icons/md";
 import { BsCheckCircleFill, BsExclamationTriangleFill } from "react-icons/bs";
 
 const OrderView = () => {
-const getStatusIcon = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "unbooked":
-      return <FaBoxOpen size={40} className="text-blue-600" />;
-    case "shipment arrive":
-      return <FaWarehouse size={40} className="text-orange-500" />;
-    case "out for delivery":
-      return <FaTruck size={40} className="text-blue-500" />;
-    case "shipment picked":
-      return <MdLocalShipping size={40} className="text-yellow-500" />;
-    case "delivered":
-      return <BsCheckCircleFill size={40} className="text-green-600" />;
-    case "returned":
-      return <FaUndoAlt size={40} className="text-rose-600" />;
-    case "delivery underreview":
-      return <BsExclamationTriangleFill size={40} className="text-orange-500" />;
-    case "attempted":
-      return <MdPersonOff size={40} className="text-red-500" />;
-    case "cne":
-      return <MdSignalWifiOff size={40} className="text-gray-500" />;
-    case "ica":
-      return <FaMapMarkerAlt size={40} className="text-yellow-600" />;
-    default:
-      return <FaBoxOpen size={40} className="text-gray-400" />;
-  }
-};
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "unbooked":
+        return <FaBoxOpen size={40} className="text-blue-600" />;
+      case "shipment arrive":
+        return <FaWarehouse size={40} className="text-orange-500" />;
+      case "out for delivery":
+        return <FaTruck size={40} className="text-blue-500" />;
+      case "shipment picked":
+        return <MdLocalShipping size={40} className="text-yellow-500" />;
+      case "delivered":
+        return <BsCheckCircleFill size={40} className="text-green-600" />;
+      case "returned":
+        return <FaUndoAlt size={40} className="text-rose-600" />;
+      case "delivery underreview":
+        return (
+          <BsExclamationTriangleFill size={40} className="text-orange-500" />
+        );
+      case "attempted":
+        return <MdPersonOff size={40} className="text-red-500" />;
+      case "reattempt":
+        return <FaRedo size={40} className="text-indigo-600" />;
+      default:
+        return <FaBoxOpen size={40} className="text-gray-400" />;
+    }
+  };
 
   const formatMessage = (msg?: string) => {
     if (!msg) return "";

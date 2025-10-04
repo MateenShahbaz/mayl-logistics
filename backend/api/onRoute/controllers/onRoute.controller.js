@@ -215,7 +215,7 @@ exports.updateOrderStatuses = async (req, res) => {
     const { id } = req.params;
     const { orderUpdates } = req.body;
     const user = req.user;
-        
+
     if (!Array.isArray(orderUpdates)) {
       return response.data_error_message({ message: "Invalid payload" }, res);
     }
@@ -223,7 +223,7 @@ exports.updateOrderStatuses = async (req, res) => {
     for (let update of orderUpdates) {
       if (!update.status) continue;
 
-      const order = await orderModel.findById(update.orderId);
+      const order = await orderModel.findById(update.orderId).select("status");
       if (!order) continue;
 
       const prevStatus = order.status;
@@ -241,7 +241,7 @@ exports.updateOrderStatuses = async (req, res) => {
 
         case "returned":
           newStatus = "returned";
-          message = "parcel is delivered";
+          message = "return process initiated";
           // isForward = false;
           break;
 
@@ -291,6 +291,100 @@ exports.updateOrderStatuses = async (req, res) => {
     await onRoute.save();
 
     response.success_message({ message: "Orders statuses is changeded" }, res);
+  } catch (error) {
+    console.log(error.message);
+    response.error_message(error.message);
+  }
+};
+
+exports.shipperAdviceList = async (req, res) => {
+  try {
+    const { selectDate } = req.query;
+    let query = {
+      type: "delivery",
+    };
+
+    if (selectDate) {
+      const start = new Date(`${selectDate}T00:00:00.000Z`);
+      const end = new Date(`${selectDate}T23:59:59.999Z`);
+
+      query.createdAt = { $gte: start, $lte: end };
+    }
+
+    const lists = await onRouteModel
+      .find(query)
+      .populate({
+        path: "orders",
+        match: { status: "delivery underreview" },
+        select:
+          "orderNumber orderType merchant refNumber amount customer status",
+      })
+      .lean();
+
+    const orders = lists.flatMap((or) => or.orders).filter((o) => o);
+
+    response.success_message(orders, res);
+  } catch (error) {
+    console.log(error.message);
+    response.error_message(error.message);
+  }
+};
+
+exports.shipperAdviceStatus = async (req, res) => {
+  try {
+    const { orderUpdates } = req.body;
+    const user = req.user;
+
+    if (!Array.isArray(orderUpdates)) {
+      return response.data_error_message({ message: "Invalid payload" }, res);
+    }
+
+    for (let update of orderUpdates) {
+      if (!update.status) continue;
+
+      const order = await orderModel.findById(update.orderId).select("status");
+      if (!order) continue;
+
+      const prevStatus = order.status;
+
+      // ====== Status Mapping ======
+      let newStatus = update.status;
+      let message = "";
+      let isForward = true;
+
+      switch (update.status) {
+        case "reattempt":
+          newStatus = "reattempt";
+          message = "request to reattempt the delivery";
+          break;
+
+        case "returned":
+          newStatus = "returned";
+          message = "return process initiated";
+          break;
+
+        default:
+          newStatus = update.status;
+          message = "";
+      }
+
+      await orderModel.findByIdAndUpdate(update.orderId, { status: newStatus });
+
+      const history = new historyModel({
+        orderId: update.orderId,
+        previousStatus: prevStatus,
+        newStatus: newStatus,
+        message: message,
+        courierId: "",
+        visibleToShipper: true,
+        isForward: isForward,
+        createdBy: user?.id,
+        isDelete: false,
+      });
+      await history.save();
+    }
+
+    response.success_message({ message: "Shipper advice status changed" }, res);
   } catch (error) {
     console.log(error.message);
     response.error_message(error.message);

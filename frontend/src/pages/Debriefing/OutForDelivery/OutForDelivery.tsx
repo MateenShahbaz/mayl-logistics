@@ -208,6 +208,7 @@ const OutForDelivery = () => {
                   <div className="my-4 flex justify-end gap-3">
                     <Button
                       className=""
+                      type="button"
                       variant="outline"
                       onClick={handleClear}
                     >

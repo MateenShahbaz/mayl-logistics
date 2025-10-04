@@ -106,7 +106,8 @@ const OrderSchema = new mongoose.Schema(
         "stolen",
         "damage",
         "delivery underreview",
-        "attempted"
+        "attempted",
+        "reattempt"
       ],
     },
     userId: {
