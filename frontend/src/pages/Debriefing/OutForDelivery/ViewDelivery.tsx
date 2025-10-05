@@ -142,7 +142,7 @@ const ViewDelivery = () => {
                           >
                             <option value="">-- Select --</option>
                             <option value="delivered">Delivered</option>
-                            <option value="returned">Return</option>
+                            <option value="return">Return</option>
                             <option value="shipper advice">
                               Shipper Advice
                             </option>

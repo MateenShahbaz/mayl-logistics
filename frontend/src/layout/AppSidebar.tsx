@@ -66,6 +66,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Out for delivery", path: "/out-for-delivery", pro: false },
       { name: "Shipper Advice", path: "/shipper-advice", pro: false },
+      { name: "On Route Return", path: "/route-return", pro: false },
     ],
   },
   { icon: <UserCircleIcon />, name: "User Profile", path: "/profile" },

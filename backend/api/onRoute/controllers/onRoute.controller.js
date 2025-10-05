@@ -9,6 +9,12 @@ async function generateSheetNumber(courierId) {
   return `LHR-${courierId}-FWD-${nextNumber}`;
 }
 
+async function generateSheetNumberReturn(courierId) {
+  const count = await onRouteModel.countDocuments({ type: "return" });
+  const nextNumber = (count + 1).toString().padStart(3, "0");
+  return `LHR-${courierId}-RTN-${nextNumber}`;
+}
+
 exports.fetchingOrder = async (req, res) => {
   try {
     const { trackingNo } = req.body;
@@ -18,10 +24,11 @@ exports.fetchingOrder = async (req, res) => {
       return response.data_error_message({ message: "Order not found" }, res);
     }
 
-    if (order.status !== "arrived") {
+    if (!["arrived", "attempted", "reattempt"].includes(order.status)) {
       return response.data_error_message(
         {
-          message: "Shipment can only OnRoute if order is arrive or reattempt",
+          message:
+            "Shipment can only OnRoute if order is arrived, attempted, or reattempt",
         },
         res
       );
@@ -31,6 +38,44 @@ exports.fetchingOrder = async (req, res) => {
       _id: order._id,
       orderNumber: order?.orderNumber,
       customer: order?.customer,
+      merchant: order?.merchant,
+      actualWeight: order?.actualWeight,
+      amount: order?.amount,
+      refNumber: order?.refNumber,
+      items: order?.items,
+    };
+
+    response.success_message(data, res);
+  } catch (error) {
+    console.log(error.message);
+    response.error_message(error.message);
+  }
+};
+
+exports.fetchingReturnOrder = async (req, res) => {
+  try {
+    const { trackingNo } = req.body;
+
+    const order = await orderModel.findOne({ orderNumber: trackingNo });
+    if (!order) {
+      return response.data_error_message({ message: "Order not found" }, res);
+    }
+
+    if (order.status !== "returned") {
+      return response.data_error_message(
+        {
+          message:
+            "Shipment can only OnReturn if order is returned",
+        },
+        res
+      );
+    }
+
+    const data = {
+      _id: order._id,
+      orderNumber: order?.orderNumber,
+      customer: order?.customer,
+      shipper: order?.shipperInfo,
       merchant: order?.merchant,
       actualWeight: order?.actualWeight,
       amount: order?.amount,
@@ -80,6 +125,54 @@ exports.addDevlivery = async (req, res) => {
     await orderModel.updateMany(
       { _id: { $in: orders } },
       { $set: { status: "out for delivery" } }
+    );
+
+    const data = {
+      sheetNumber: onRouteSheet.sheetNumber,
+      createdAt: onRouteSheet.createdAt,
+    };
+    response.success_message(data, res);
+  } catch (error) {
+    console.log(error.message);
+    response.error_message(error.message);
+  }
+};
+
+exports.addReturn = async (req, res) => {
+  try {
+    const { type, courierId, orders } = req.body;
+    const userId = req.user.id;
+
+    const sheetNumber = await generateSheetNumberReturn(courierId);
+    const onRouteSheet = await onRouteModel.create({
+      sheetNumber,
+      orders,
+      branch: "LHE",
+      type,
+      courierId,
+      userId,
+      status: "new",
+    });
+
+    const foundOrders = await orderModel.find({ _id: { $in: orders } });
+
+    const histories = foundOrders.map((order) => ({
+      orderId: order._id,
+      previousStatus: order.status,
+      newStatus: "out for return",
+      message: "Parcel out for return",
+      courierId,
+      createdBy: userId,
+      visibleToShipper: true,
+      isDelete: false,
+      isForward: true,
+    }));
+
+    await historyModel.insertMany(histories);
+
+    await orderModel.updateMany(
+      { _id: { $in: orders } },
+      { $set: { status: "out for return" } }
     );
 
     const data = {
@@ -192,6 +285,43 @@ exports.outForDeliveryList = async (req, res) => {
   }
 };
 
+exports.outForReturnList = async (req, res) => {
+  try {
+    const { selectDate, search, searchType } = req.query;
+    let query = {
+      type: "return",
+    };
+
+    if (search && searchType) {
+      switch (searchType) {
+        case "sheet no":
+          query.sheetNumber = { $regex: search, $options: "i" };
+          break;
+        case "courier id":
+          query.courierId = { $regex: search, $options: "i" };
+          break;
+      }
+    }
+
+    if (selectDate) {
+      const start = new Date(`${selectDate}T00:00:00.000Z`);
+      const end = new Date(`${selectDate}T23:59:59.999Z`);
+
+      query.createdAt = { $gte: start, $lte: end };
+    }
+
+    const lists = await onRouteModel
+      .find(query)
+      .select("sheetNumber type courierId orders createdAt status")
+      .lean();
+
+    response.success_message(lists, res);
+  } catch (error) {
+    console.log(error.message);
+    response.error_message(error.message);
+  }
+};
+
 exports.view = async (req, res) => {
   try {
     const { id } = req.params;
@@ -239,8 +369,8 @@ exports.updateOrderStatuses = async (req, res) => {
           message = "parcel is delivered";
           break;
 
-        case "returned":
-          newStatus = "returned";
+        case "return":
+          newStatus = "return";
           message = "return process initiated";
           // isForward = false;
           break;
@@ -358,8 +488,8 @@ exports.shipperAdviceStatus = async (req, res) => {
           message = "request to reattempt the delivery";
           break;
 
-        case "returned":
-          newStatus = "returned";
+        case "return":
+          newStatus = "return";
           message = "return process initiated";
           break;
 

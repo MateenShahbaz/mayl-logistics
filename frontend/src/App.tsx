@@ -29,6 +29,8 @@ import AddOnRoute from "./pages/MayllogisticsCalc/OnRoute/AddOnRoute";
 import OutForDelivery from "./pages/Debriefing/OutForDelivery/OutForDelivery";
 import ViewDelivery from "./pages/Debriefing/OutForDelivery/ViewDelivery";
 import ShipperAdvice from "./pages/Debriefing/ShipperAdvice/ShipperAdvice";
+import RouteReturn from "./pages/Debriefing/OnRouteReturn/RouteReturn";
+import ViewReturn from "./pages/Debriefing/OnRouteReturn/ViewReturn";
 
 export default function App() {
   return (
@@ -66,6 +68,8 @@ export default function App() {
           <Route path="/out-for-delivery" element={<OutForDelivery />} />
           <Route path="/view-delivery/:id" element={<ViewDelivery />} />
           <Route path="/shipper-advice" element={<ShipperAdvice />} />
+          <Route path="/route-return" element={<RouteReturn />} />
+          <Route path="/view-return/:id" element={<ViewReturn />} />
         </Route>
 
         {/* Public routes */}

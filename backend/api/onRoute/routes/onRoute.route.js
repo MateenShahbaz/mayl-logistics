@@ -3,9 +3,12 @@ const router = express.Router();
 const OnRouteController = require("../controllers/onRoute.controller");
 
 router.post("/fetchOrder", OnRouteController.fetchingOrder);
+router.post("/fetchReturnOrder", OnRouteController.fetchingReturnOrder);
 router.post("/add", OnRouteController.addDevlivery);
+router.post("/addReturn", OnRouteController.addReturn);
 router.get("/list", OnRouteController.list);
 router.get("/deliveryList", OnRouteController.outForDeliveryList);
+router.get("/returnList", OnRouteController.outForReturnList);
 router.get("/view/:id", OnRouteController.view);
 router.put("/update-status/:id", OnRouteController.updateOrderStatuses);
 router.get("/shipper-advice", OnRouteController.shipperAdviceList);

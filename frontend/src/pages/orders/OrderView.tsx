@@ -24,6 +24,8 @@ const OrderView = () => {
         return <FaWarehouse size={40} className="text-orange-500" />;
       case "out for delivery":
         return <FaTruck size={40} className="text-blue-500" />;
+      case "out for return":
+        return <FaTruck size={40} className="text-blue-500" />;
       case "shipment picked":
         return <MdLocalShipping size={40} className="text-yellow-500" />;
       case "delivered":

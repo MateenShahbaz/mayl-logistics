@@ -1,45 +1,37 @@
-import { DatePicker } from "antd";
+import { useNavigate, useParams } from "react-router";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
-import Button from "../../../components/ui/button/Button";
-import Label from "../../../components/form/Label";
-import { useState } from "react";
-import dayjs from "dayjs";
+import { useEffect, useState } from "react";
 import { apiCaller } from "../../../core/API/ApiServices";
 import { errorToast, successToast } from "../../../core/core-index";
 
 interface OrderStatuses {
   [orderId: string]: string;
 }
-const ShipperAdvice = () => {
-  const [selectDate, setSelectDate] = useState<any>(dayjs());
+
+const ViewReturn = () => {
+  const { id } = useParams();
   const [route, setRoute] = useState<any>(null);
   const [orderStatuses, setOrderStatuses] = useState<OrderStatuses>({});
-
-  const handleSearch = async () => {
-    const params: any = {};
-    if (selectDate) params.selectDate = selectDate.format("YYYY-MM-DD");
-
+  const navigate = useNavigate();
+  const fetchDetails = async () => {
     const response = await apiCaller({
       method: "GET",
-      url: `/onroute/shipper-advice`,
-      params,
+      url: `/onroute/view/${id}`,
     });
     if (response.code === 200) {
       setRoute(response.data);
       const statuses: Record<string, string> = {};
-      response.data.forEach((o: { _id: string }) => {
+      response.data.orders.forEach((o: { _id: string }) => {
         statuses[o._id] = "";
       });
       setOrderStatuses(statuses);
     }
   };
 
-  const handleClear = () => {
-    setSelectDate(dayjs());
-    setRoute(null);
-    setOrderStatuses({});
-  };
+  useEffect(() => {
+    fetchDetails();
+  }, [id]);
 
   const handleStatusChange = (orderId: string, value: string) => {
     const newStatuses = { ...orderStatuses, [orderId]: value };
@@ -55,24 +47,23 @@ const ShipperAdvice = () => {
       errorToast("No orders selected for update!");
       return;
     }
-    try {
-      const response = await apiCaller({
-        method: "PUT",
-        url: `/onroute/shipper-advice/update`,
-        data: { orderUpdates: updates },
-      });
-
-      if (response.code === 200) {
-        successToast("Statuses updated successfully!");
-        handleSearch();
-      }
-    } catch (error) {}
+    console.log(updates);
+    
+    // const response = await apiCaller({
+    //   method: "PUT",
+    //   url: `/onroute/update-status/${id}`,
+    //   data: { orderUpdates: updates },
+    // });
+    // if (response.code === 200) {
+    //   successToast("Statuses updated successfully");
+    //   navigate("/out-for-delivery");
+    // }
   };
 
   return (
     <>
-      <PageMeta title="Mayl Logistics" description="Shipper Advice" />
-      <PageBreadcrumb pageTitle="Shipper Advice" />
+      <PageMeta title="Mayl Logistics" description="Out for delivery" />
+      <PageBreadcrumb pageTitle="View delivery" />
 
       <div className="space-y-6">
         <div
@@ -81,88 +72,39 @@ const ShipperAdvice = () => {
           {/* Card Header */}
           <div className="flex justify-between px-6 py-5">
             <h3 className="text-base mt-3 font-medium text-gray-800 dark:text-white/90">
-              Changing Status of Shipper Advice
+              Changing Status of onRoute Deliveries
             </h3>
           </div>
 
-          <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
-            <div className="space-y-6">
-              <div className="w-full">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSearch();
-                  }}
-                >
-                  <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-3 mt-5">
-                    <div className="col-span-1">
-                      <Label>Select Date</Label>
-                      <DatePicker
-                        value={selectDate}
-                        onChange={(val) => setSelectDate(val)}
-                        format="YYYY-MM-DD"
-                        className="w-full h-11 rounded-lg border border-gray-200 shadow-theme-xs"
-                        placeholder="Select Select Date"
-                      />
-                    </div>
-                  </div>
+          <div className="p-4">
+            <h2 className="text-xl font-bold mb-4">
+              Delivery Sheet: {route?.sheetNumber}
+            </h2>
 
-                  <div className="my-4 flex justify-end gap-3">
-                    <Button
-                      className=""
-                      type="button"
-                      variant="outline"
-                      onClick={handleClear}
-                    >
-                      Clear Filter
-                    </Button>
-                    <Button type="submit" variant="primary">
-                      Search Filter
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 overflow-x-auto overflow-y-visible">
             {/* Orders Table */}
             <table className="w-full border-collapse border border-gray-300 text-sm">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="border px-3 py-2 text-left">Order #</th>
                   <th className="border px-3 py-2 text-left">Merchant</th>
-                  <th className="border px-3 py-2 text-left">Customer</th>
                   <th className="border px-3 py-2 text-left">Amount</th>
                   <th className="border px-3 py-2 text-left">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {route?.length > 0 ? (
-                  route?.map((order: any) => (
+                {route?.orders.length > 0 ? (
+                  route?.orders.map((order: any) => (
                     <tr
                       key={order?._id}
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="border px-3 py-2">{order?.orderNumber}</td>
                       <td className="border px-3 py-2">{order?.merchant}</td>
-                      <td className="border px-3 py-2">
-                        <div className="font-medium">
-                          {order?.customer?.name}
-                        </div>
-                        <div className="text-gray-600 text-xs">
-                          {order?.customer?.contactNumber}
-                        </div>
-                        <div className="text-gray-500 text-xs">
-                          {order?.customer?.deliverCity} -{" "}
-                          {order?.customer?.deliveryAddress}
-                        </div>
-                      </td>
                       <td className="border px-3 py-2 font-semibold text-green-600">
                         {order?.amount?.toFixed(2)}
                       </td>
                       <td className="border px-3 py-2">
-                        {route?.status !== "close" ? (
+                        {route?.status !== "returned" ? (
                           <select
                             className="border rounded px-2 py-1 text-sm w-full"
                             value={orderStatuses[order?._id] || ""}
@@ -171,8 +113,7 @@ const ShipperAdvice = () => {
                             }
                           >
                             <option value="">-- Select --</option>
-                            <option value="return">Return</option>
-                            <option value="reattempt">Reattempt</option>
+                            <option value="returned">Are / Ok</option>
                           </select>
                         ) : (
                           <span className="font-semibold text-green-600">
@@ -208,4 +149,4 @@ const ShipperAdvice = () => {
   );
 };
 
-export default ShipperAdvice;
+export default ViewReturn;

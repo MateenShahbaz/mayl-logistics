@@ -99,6 +99,7 @@ const OrderSchema = new mongoose.Schema(
         "inTransit",
         "out for delivery",
         "delivered",
+        "return",
         "returned",
         "cancelled",
         "expired",
@@ -107,7 +108,8 @@ const OrderSchema = new mongoose.Schema(
         "damage",
         "delivery underreview",
         "attempted",
-        "reattempt"
+        "reattempt",
+        "out for return"
       ],
     },
     userId: {

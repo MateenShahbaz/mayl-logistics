@@ -724,7 +724,12 @@ export const deliveryRouteSheetPdf = (
   const addFooter = () => {
     const footerY = pageHeight - 12;
     const colWidth = pageWidth / 4;
-    const roles = ["Courier Officer", "Security Officer", "Ops Supervisor", "AMO"];
+    const roles = [
+      "Courier Officer",
+      "Security Officer",
+      "Ops Supervisor",
+      "AMO",
+    ];
 
     doc.setFontSize(8);
     roles.forEach((role, i) => {
@@ -887,4 +892,248 @@ export const deliveryRouteSheetPdf = (
 
   addFooter();
   doc.save(`RouteSheetDelivery.pdf`);
+};
+
+const groupByMerchant = (orders: any[]) => {
+  return orders.reduce((acc, order) => {
+    const merchantId = order.merchant || "unknown";
+    if (!acc[merchantId]) {
+      acc[merchantId] = {
+        merchant: order.merchant,
+        shipper: order.shipperInfo,
+        orders: [],
+      };
+    }
+    acc[merchantId].orders.push(order);
+    return acc;
+  }, {});
+};
+
+export const returnRouteSheetPdf = (
+  tableData: any[],
+  courierId: string,
+  sheetNumber: string,
+  createdAt: string
+) => {
+  const doc = new jsPDF("p", "mm", "a4");
+  doc.setFont("helvetica");
+  doc.setFontSize(10);
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  const marginLeft = 10;
+  const marginRight = 10;
+  const gapBetweenBoxes = 8;
+  const usableWidth = pageWidth - marginLeft - marginRight;
+  const boxWidth = (usableWidth - gapBetweenBoxes) / 2;
+  const startYInitial = 40; // start lower because we print merchant info
+  const headerHeight = 7;
+  const bodyLineHeight = 5;
+  const minBodyLines = 3;
+  const innerPadding = 1;
+  const rowSpacing = 0.5;
+  const bottomMargin = 25;
+
+  const refTotal = 90;
+  const colProps = { count: 8, tracking: 38, info: 20, ref: 20 };
+  const colWidths = {
+    count: (colProps.count / refTotal) * boxWidth,
+    tracking: (colProps.tracking / refTotal) * boxWidth,
+    info: (colProps.info / refTotal) * boxWidth,
+    ref: (colProps.ref / refTotal) * boxWidth,
+  };
+
+  const grouped = groupByMerchant(tableData);
+  const merchants = Object.values(grouped);
+
+  merchants.forEach((merchantGroup: any, pageIndex: number) => {
+    if (pageIndex > 0) doc.addPage();
+
+    const { merchant, orders } = merchantGroup;
+
+    // HEADER
+    const addHeader = () => {
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Courier Return Route Sheet", 14, 10);
+
+      const disclaimer =
+        "Rider is responsible for mishandled shipments. Each return must be signed/stamped; negligence will face action.";
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6);
+      const disclaimerWidth = pageWidth - 110;
+      const disclaimerX = pageWidth - disclaimerWidth - 14;
+      const disclaimerY = 10;
+      const disclaimerLines = doc.splitTextToSize(disclaimer, disclaimerWidth);
+      doc.text(disclaimerLines, disclaimerX, disclaimerY, {
+        maxWidth: disclaimerWidth,
+      });
+
+      const leftX = 14;
+      const rightX = pageWidth - 70;
+      const formattedDate = new Date(createdAt).toLocaleDateString();
+
+      doc.setFontSize(10);
+      doc.text(`Courier ID: ${courierId || "-"}`, leftX, 16);
+      doc.text(`Branch: Lahore`, rightX, 16);
+
+      doc.setFontSize(9);
+      doc.text(`Sheet Number: ${sheetNumber}`, leftX, 21);
+      doc.text(`Date: ${formattedDate}`, rightX, 21);
+
+      doc.text(`Total Records: ${tableData.length}`, leftX, 26);
+      doc.text(`Orders of this Merchant: ${orders.length}`, rightX, 26);
+
+      // Merchant / Shipper Info
+      doc.setFontSize(9);
+      doc.text(`Merchant: ${merchant || "-"}`, leftX, 32);
+    };
+
+    const addFooter = () => {
+      const footerY = pageHeight - 12;
+      const colWidth = pageWidth / 4;
+      const roles = [
+        "Courier Officer",
+        "Security Officer",
+        "Ops Supervisor",
+        "AMO",
+      ];
+      doc.setFontSize(8);
+      roles.forEach((role, i) => {
+        const x = i * colWidth + 10;
+        doc.text(`${role}: ____________________`, x, footerY);
+      });
+    };
+
+    addHeader();
+
+    // DRAW BOX FUNCTION
+    const drawBox = (
+      row: any,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      indexSerial: number
+    ) => {
+      doc.roundedRect(x, y, width, height, 2, 2);
+
+      const v1 = x + colWidths.count;
+      const v2 = v1 + colWidths.tracking;
+      const v3 = v2 + colWidths.info;
+      doc.setLineWidth(0.3);
+      doc.line(v1, y, v1, y + height);
+      doc.line(v2, y, v2, y + height);
+      doc.line(v3, y, v3, y + height);
+
+      const headerY = y + headerHeight;
+      doc.line(x, headerY, x + width, headerY);
+
+      const colX = {
+        count: x + innerPadding,
+        tracking: v1 + innerPadding,
+        info: v2 + innerPadding,
+        ref: v3 + innerPadding,
+      };
+
+      doc.setFontSize(7);
+
+      doc.text(String(indexSerial), colX.count, y + 5);
+
+      doc.setFont("helvetica", "bold");
+      doc.text(
+        String(row.orderNumber || row.trackingNo || "-"),
+        colX.tracking,
+        y + 5,
+        { maxWidth: colWidths.tracking - innerPadding }
+      );
+      doc.setFont("helvetica", "normal");
+
+      doc.text("Return Info", colX.info, y + 5);
+
+      doc.setFont("helvetica", "bold");
+      doc.text(String(row.refNumber || "-"), colX.ref, y + 5, {
+        maxWidth: colWidths.ref - innerPadding,
+      });
+      doc.setFont("helvetica", "normal");
+
+      const trackingMaxW = colWidths.tracking - innerPadding * 1.5;
+      const address = row.shipper?.returnAddress || "";
+      const addressLines = address
+        ? doc.splitTextToSize(String(address), trackingMaxW)
+        : [];
+
+      const firstBodyY = headerY + bodyLineHeight;
+      doc.setFontSize(6);
+      doc.text("Pcs:", colX.count, firstBodyY);
+      doc.text(`${row.items || 1}`, colX.count + 2, firstBodyY + 2);
+      doc.text("Wt:", colX.count, firstBodyY + 6);
+      doc.text(`${row.actualWeight ?? 0}`, colX.count + 2, firstBodyY + 8);
+
+      const addressLineHeight = 3.2;
+      let addrY = firstBodyY;
+      addressLines.forEach((line: any) => {
+        doc.text(line, colX.tracking, addrY, { maxWidth: trackingMaxW });
+        addrY += addressLineHeight;
+      });
+
+      doc.text(`${row.shipper?.mobile || "-"}`, colX.info, firstBodyY);
+      doc.setFontSize(6);
+      doc.text(`Mayl logistics COD`, colX.info, firstBodyY + bodyLineHeight);
+      doc.setFontSize(7);
+
+      doc.text("Receiver:", colX.ref, firstBodyY);
+    };
+
+    // LOOP ORDERS
+    let startY = startYInitial;
+    for (let i = 0; i < orders.length; i += 2) {
+      const left = orders[i];
+      const right = orders[i + 1];
+
+      const leftAddrLines = doc.splitTextToSize(
+        String(left?.shipper?.returnAddress || ""),
+        colWidths.tracking - innerPadding
+      );
+      const rightAddrLines = right
+        ? doc.splitTextToSize(
+            String(right?.shipper?.returnAddress || ""),
+            colWidths.tracking - innerPadding
+          )
+        : [];
+
+      const leftNeededLines = Math.max(minBodyLines, leftAddrLines.length);
+      const rightNeededLines = Math.max(minBodyLines, rightAddrLines.length);
+      const neededBodyLines = Math.max(leftNeededLines, rightNeededLines);
+      const rowHeight =
+        headerHeight + neededBodyLines * bodyLineHeight + innerPadding * 2 + 1;
+
+      if (startY + rowHeight + bottomMargin > pageHeight) {
+        addFooter();
+        doc.addPage();
+        addHeader();
+        startY = startYInitial;
+      }
+
+      drawBox(left, marginLeft, startY, boxWidth, rowHeight, i + 1);
+      if (right) {
+        drawBox(
+          right,
+          marginLeft + boxWidth + gapBetweenBoxes,
+          startY,
+          boxWidth,
+          rowHeight,
+          i + 2
+        );
+      }
+
+      startY += rowHeight + rowSpacing;
+    }
+
+    addFooter();
+  });
+
+  doc.save("ReturnRouteSheet.pdf");
 };

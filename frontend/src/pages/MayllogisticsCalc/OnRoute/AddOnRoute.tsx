@@ -8,7 +8,10 @@ import { errorToast, successToast } from "../../../core/core-index";
 import { apiCaller } from "../../../core/API/ApiServices";
 import Button from "../../../components/ui/button/Button";
 import { Table } from "antd";
-import { deliveryRouteSheetPdf } from "../../../utils/generatePDF";
+import {
+  deliveryRouteSheetPdf,
+  returnRouteSheetPdf,
+} from "../../../utils/generatePDF";
 import { useNavigate } from "react-router";
 
 const options = [{ value: "lahore", label: "Lahore" }];
@@ -30,9 +33,14 @@ const AddOnRoute = () => {
       return;
     }
 
+    const weburl =
+      route === "delivery"
+        ? "/onroute/fetchOrder"
+        : "/onroute/fetchReturnOrder";
+
     const response = await apiCaller({
       method: "POST",
-      url: "/onroute/fetchOrder",
+      url: weburl,
       data: {
         trackingNo,
       },
@@ -129,7 +137,7 @@ const AddOnRoute = () => {
     }
 
     if (!courierId || !route || !status) {
-      errorToast("All fields are  required for on route");
+      errorToast("All fields are required for on route");
       return;
     }
 
@@ -142,22 +150,35 @@ const AddOnRoute = () => {
       status,
     };
 
+    const weburl = route === "delivery" ? "/onroute/add" : "/onroute/addReturn";
+
     const response = await apiCaller({
       method: "POST",
-      url: "/onroute/add",
+      url: weburl,
       data: payload,
     });
 
     if (response.code === 200) {
-      successToast("Delivery Sheet generated successfully");
-      await deliveryRouteSheetPdf(
-        tableData,
-        courierId,
-        response.data.sheetNumber,
-        response.data.createdAt
-      );
+      if (route === "delivery") {
+        successToast("Delivery Sheet generated successfully");
+        await deliveryRouteSheetPdf(
+          tableData,
+          courierId,
+          response?.data.sheetNumber,
+          response?.data.createdAt
+        );
+      } else if (route === "return") {
+        successToast("Return Sheet generated successfully");
+        await returnRouteSheetPdf(
+          tableData,
+          courierId,
+          response?.data.sheetNumber,
+          response?.data.createdAt
+        );
+      }
+
       setTableData([]);
-      navigate("/on-route")
+      navigate("/on-route");
     }
   };
 
@@ -201,7 +222,10 @@ const AddOnRoute = () => {
                         options={routeType}
                         defaultValue={route}
                         placeholder="Choose Route Type"
-                        onChange={(val: string) => setRoute(val)}
+                        onChange={(val: string) => {
+                          setRoute(val);
+                          setTableData([]);
+                        }}
                       />
                     </div>
 
