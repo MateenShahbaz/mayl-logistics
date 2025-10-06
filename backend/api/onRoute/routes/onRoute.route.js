@@ -11,6 +11,7 @@ router.get("/deliveryList", OnRouteController.outForDeliveryList);
 router.get("/returnList", OnRouteController.outForReturnList);
 router.get("/view/:id", OnRouteController.view);
 router.put("/update-status/:id", OnRouteController.updateOrderStatuses);
+router.put("/return-status/:id", OnRouteController.returnStatus);
 router.get("/shipper-advice", OnRouteController.shipperAdviceList);
 router.put("/shipper-advice/update", OnRouteController.shipperAdviceStatus);
 

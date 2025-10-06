@@ -61,7 +61,7 @@ exports.fetchingReturnOrder = async (req, res) => {
       return response.data_error_message({ message: "Order not found" }, res);
     }
 
-    if (order.status !== "returned") {
+    if (order.status !== "return") {
       return response.data_error_message(
         {
           message:
@@ -165,7 +165,7 @@ exports.addReturn = async (req, res) => {
       createdBy: userId,
       visibleToShipper: true,
       isDelete: false,
-      isForward: true,
+      isForward: false,
     }));
 
     await historyModel.insertMany(histories);
@@ -515,6 +515,63 @@ exports.shipperAdviceStatus = async (req, res) => {
     }
 
     response.success_message({ message: "Shipper advice status changed" }, res);
+  } catch (error) {
+    console.log(error.message);
+    response.error_message(error.message);
+  }
+};
+
+
+exports.returnStatus = async (req, res) => {
+  try {
+    const { orderUpdates } = req.body;
+    const user = req.user;
+
+    if (!Array.isArray(orderUpdates)) {
+      return response.data_error_message({ message: "Invalid payload" }, res);
+    }
+
+    for (let update of orderUpdates) {
+      if (!update.status) continue;
+
+      const order = await orderModel.findById(update.orderId).select("status");
+      if (!order) continue;
+
+      const prevStatus = order.status;
+
+      // ====== Status Mapping ======
+      let newStatus = update.status;
+      let message = "";
+      let isForward = false;
+
+      switch (update.status) {
+        case "returned":
+          newStatus = "returned";
+          message = "parcel at merchant wearhouse";
+          break;
+
+        default:
+          newStatus = update.status;
+          message = "";
+      }
+
+      await orderModel.findByIdAndUpdate(update.orderId, { status: newStatus });
+
+      const history = new historyModel({
+        orderId: update.orderId,
+        previousStatus: prevStatus,
+        newStatus: newStatus,
+        message: message,
+        courierId: "",
+        visibleToShipper: true,
+        isForward: isForward,
+        createdBy: user?.id,
+        isDelete: false,
+      });
+      await history.save();
+    }
+
+    response.success_message({ message: "Return status changed" }, res);
   } catch (error) {
     console.log(error.message);
     response.error_message(error.message);

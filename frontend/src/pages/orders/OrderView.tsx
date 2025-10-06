@@ -5,12 +5,7 @@ import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Badge from "../../components/ui/badge/Badge";
 import dayjs from "dayjs";
-import {
-  FaBoxOpen,
-  FaRedo,
-  FaTruck,
-  FaUndoAlt,
-} from "react-icons/fa";
+import { FaBoxOpen, FaRedo, FaTruck, FaUndoAlt } from "react-icons/fa";
 import { FaWarehouse } from "react-icons/fa6";
 import { MdLocalShipping, MdPersonOff } from "react-icons/md";
 import { BsCheckCircleFill, BsExclamationTriangleFill } from "react-icons/bs";
@@ -30,7 +25,7 @@ const OrderView = () => {
         return <MdLocalShipping size={40} className="text-yellow-500" />;
       case "delivered":
         return <BsCheckCircleFill size={40} className="text-green-600" />;
-      case "returned":
+      case "return":
         return <FaUndoAlt size={40} className="text-rose-600" />;
       case "delivery underreview":
         return (
@@ -280,8 +275,17 @@ const OrderView = () => {
                       key={history._id}
                       className="flex flex-col items-center gap-4 border-b border-gray-100 pb-3"
                     >
-                      <div className="flex-shrink-0">
+                      <div className="flex-shrink-0 relative">
                         {getStatusIcon(history.newStatus)}
+                        <span
+                          className={`absolute top-0 left-12 px-2 py-1 text-xs font-bold rounded-full ${
+                            history?.isForward
+                              ? "bg-green-500 text-white"
+                              : "bg-red-500 text-white"
+                          }`}
+                        >
+                          {history?.isForward ? "F" : "R"}
+                        </span>
                       </div>
 
                       <div>

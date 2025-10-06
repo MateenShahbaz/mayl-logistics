@@ -48,16 +48,16 @@ const ViewReturn = () => {
       return;
     }
     console.log(updates);
-    
-    // const response = await apiCaller({
-    //   method: "PUT",
-    //   url: `/onroute/update-status/${id}`,
-    //   data: { orderUpdates: updates },
-    // });
-    // if (response.code === 200) {
-    //   successToast("Statuses updated successfully");
-    //   navigate("/out-for-delivery");
-    // }
+
+    const response = await apiCaller({
+      method: "PUT",
+      url: `/onroute/return-status/${id}`,
+      data: { orderUpdates: updates },
+    });
+    if (response.code === 200) {
+      successToast("Statuses updated successfully");
+      navigate("/route-return");
+    }
   };
 
   return (
@@ -104,7 +104,11 @@ const ViewReturn = () => {
                         {order?.amount?.toFixed(2)}
                       </td>
                       <td className="border px-3 py-2">
-                        {route?.status !== "returned" ? (
+                        {order?.status === "returned" ? (
+                          <span className="font-semibold text-green-600">
+                            {order?.status}
+                          </span>
+                        ) : (
                           <select
                             className="border rounded px-2 py-1 text-sm w-full"
                             value={orderStatuses[order?._id] || ""}
@@ -115,10 +119,6 @@ const ViewReturn = () => {
                             <option value="">-- Select --</option>
                             <option value="returned">Are / Ok</option>
                           </select>
-                        ) : (
-                          <span className="font-semibold text-green-600">
-                            {order?.status}
-                          </span>
                         )}
                       </td>
                     </tr>

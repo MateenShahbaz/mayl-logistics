@@ -55,44 +55,44 @@ const RouteReturn = () => {
       key: "orderCount",
       render: (_: any, record: any) => record.orders?.length || 0, // 👈 count directly
     },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => {
-        let bgColor = "#6b7280";
+    // {
+    //   title: "Status",
+    //   dataIndex: "status",
+    //   key: "status",
+    //   render: (status: string) => {
+    //     let bgColor = "#6b7280";
 
-        switch (status) {
-          case "new":
-            bgColor = "#f59e0b";
-            break;
-          case "close":
-            bgColor = "#10b981";
-            break;
-          case "picked":
-            bgColor = "#3b82f6";
-            break;
-          case "cancel":
-            bgColor = "#ef4444";
-            break;
-        }
+    //     switch (status) {
+    //       case "new":
+    //         bgColor = "#f59e0b";
+    //         break;
+    //       case "close":
+    //         bgColor = "#10b981";
+    //         break;
+    //       case "picked":
+    //         bgColor = "#3b82f6";
+    //         break;
+    //       case "cancel":
+    //         bgColor = "#ef4444";
+    //         break;
+    //     }
 
-        return (
-          <span
-            style={{
-              padding: "6px 10px",
-              borderRadius: "8px",
-              backgroundColor: bgColor,
-              color: "#fff",
-              textTransform: "uppercase",
-              fontWeight: 500,
-            }}
-          >
-            {status}
-          </span>
-        );
-      },
-    },
+    //     return (
+    //       <span
+    //         style={{
+    //           padding: "6px 10px",
+    //           borderRadius: "8px",
+    //           backgroundColor: bgColor,
+    //           color: "#fff",
+    //           textTransform: "uppercase",
+    //           fontWeight: 500,
+    //         }}
+    //       >
+    //         {status}
+    //       </span>
+    //     );
+    //   },
+    // },
     {
       title: "Action",
       dataIndex: "Action",
