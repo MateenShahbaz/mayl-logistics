@@ -117,6 +117,11 @@ const OrderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    cprGenerated:{
+      type: Boolean,
+      require: false,
+      default: false
+    }
   },
   {
     timestamps: true,

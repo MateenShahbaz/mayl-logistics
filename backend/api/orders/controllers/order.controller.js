@@ -60,6 +60,7 @@ exports.add = async (req, res) => {
       merchant: req.user?.merchant,
       status: "unbooked",
       userId: id,
+      cprGenerated: false,
     });
 
     await orderHistoryModel.create({
@@ -265,6 +266,7 @@ exports.excelUpload = async (req, res) => {
         notes: row["Notes"] || "",
         status: "unbooked",
         userId: id,
+        cprGenerated: false,
       };
 
       ordersToInsert.push(orderData);

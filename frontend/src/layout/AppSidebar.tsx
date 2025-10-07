@@ -58,6 +58,7 @@ const navItems: NavItem[] = [
       { name: "Shippment Arrives", path: "/shippment-arrives", pro: false },
       { name: "Utilities", path: "/utilities", pro: false },
       { name: "On Route", path: "/on-route", pro: false },
+      { name: "Payment", path: "/payment", pro: false },
     ],
   },
   {

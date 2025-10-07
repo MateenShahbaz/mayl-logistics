@@ -91,7 +91,7 @@ const ViewDelivery = () => {
             </h3>
           </div>
 
-          <div className="p-4">
+          <div className="p-4  overflow-x-auto overflow-y-visible">
             <h2 className="text-xl font-bold mb-4">
               Delivery Sheet: {route?.sheetNumber}
             </h2>

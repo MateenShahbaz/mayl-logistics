@@ -65,3 +65,6 @@ app.use("/history", jwtauth, orderHistory);
 
 const onRouteRoutes = require("./api/onRoute/routes/onRoute.route");
 app.use("/onroute", jwtauth, onRouteRoutes);
+
+const paymentRoutes = require("./api/payment/routes/payment.route");
+app.use("/payment", jwtauth, paymentRoutes);

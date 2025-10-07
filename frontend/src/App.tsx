@@ -31,6 +31,8 @@ import ViewDelivery from "./pages/Debriefing/OutForDelivery/ViewDelivery";
 import ShipperAdvice from "./pages/Debriefing/ShipperAdvice/ShipperAdvice";
 import RouteReturn from "./pages/Debriefing/OnRouteReturn/RouteReturn";
 import ViewReturn from "./pages/Debriefing/OnRouteReturn/ViewReturn";
+import Payment from "./pages/MayllogisticsCalc/Payment/Payment";
+import AddPayment from "./pages/MayllogisticsCalc/Payment/AddPayment";
 
 export default function App() {
   return (
@@ -70,6 +72,8 @@ export default function App() {
           <Route path="/shipper-advice" element={<ShipperAdvice />} />
           <Route path="/route-return" element={<RouteReturn />} />
           <Route path="/view-return/:id" element={<ViewReturn />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/add-payment" element={<AddPayment />} />
         </Route>
 
         {/* Public routes */}
