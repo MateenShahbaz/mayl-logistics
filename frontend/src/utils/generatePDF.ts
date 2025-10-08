@@ -1137,3 +1137,276 @@ export const returnRouteSheetPdf = (
 
   doc.save("ReturnRouteSheet.pdf");
 };
+
+interface Order {
+  orderNumber: string;
+  merchant: string;
+  actualWeight: number;
+  amount: number;
+  status: string;
+  shippingChargesTotal: number;
+  gstAmount: number;
+  saleTaxAmount: number;
+  incTaxAmount: number;
+  netTotal: number;
+  bookingDate?: string;
+  deliveredDate?: string;
+  returnDate?: string;
+}
+export const generatePaymentPDF = async (
+  orders: Order[],
+  merchant: any,
+  cprNumber: string,
+  createdAt: string
+) => {
+  const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const blue = "#007bff";
+  const gray = "#666666";
+
+  const logo = await getBase64Image("/images/logo/dark-logo.png");
+
+  const addHeader = () => {
+    doc.addImage(logo, "PNG", 10, 8, 25, 12);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Sector Y DHA phase 3 lahore", 38, 19);
+    doc.text("03314636832", 38, 24);
+
+    doc.setFont("helvetica", "bold");
+    const dateStr = new Date().toLocaleString();
+    doc.text(dateStr, pageWidth - 10, 14, { align: "right" });
+
+    doc.setDrawColor(blue);
+    doc.line(10, 27, pageWidth - 10, 27);
+  };
+  addHeader();
+
+  doc.setFontSize(14);
+  doc.setTextColor(blue);
+  doc.text("Cash Payment Receipt", 10, 38);
+  doc.setTextColor(gray);
+  doc.setFontSize(10);
+  doc.text(`CPR Number: ${cprNumber}`, 10, 44);
+  doc.text(`CPR Date: ${new Date(createdAt).toLocaleDateString()}`, 10, 49);
+
+  doc.setTextColor(blue);
+  doc.setFontSize(11);
+  doc.text("Merchant Details", 10, 60);
+  doc.setTextColor(gray);
+  doc.setFontSize(9);
+  doc.text(`${merchant.name}`, 10, 65);
+  doc.text(`${merchant.address}`, 10, 70);
+  doc.text(`${merchant.phone}`, 10, 75);
+  doc.text(`${merchant.email}`, 10, 80);
+
+  const deliveredOrders = orders.filter(
+    (o) => o.status.toLowerCase() === "delivered"
+  );
+  const returnedOrders = orders.filter(
+    (o) =>
+      o.status.toLowerCase() === "returned" ||
+      o.status.toLowerCase() === "return"
+  );
+
+  const deliveredCount = deliveredOrders.length;
+  const returnedCount = returnedOrders.length;
+
+  const deliveredCOD = deliveredOrders.reduce((sum, o) => sum + o.amount, 0);
+  const returnedCOD = returnedOrders.reduce((sum, o) => sum + o.amount, 0);
+
+  const deliveredPayable = deliveredCOD; // full amount of delivered
+  const returnedPayable = 0;
+
+  const totalPayable = deliveredPayable + returnedPayable;
+
+  const totalShipping = orders.reduce(
+    (sum, o) => sum + (Number(o.shippingChargesTotal) || 0),
+    0
+  );
+  const totalGst = orders.reduce(
+    (sum, o) => sum + (Number(o.gstAmount) || 0),
+    0
+  );
+  const totalSaleTax = orders.reduce(
+    (sum, o) => sum + (Number(o.saleTaxAmount) || 0),
+    0
+  );
+  const totalIncTax = orders.reduce(
+    (sum, o) => sum + (Number(o.incTaxAmount) || 0),
+    0
+  );
+
+  const totalDeductions = totalGst + totalSaleTax + totalIncTax + totalShipping;
+  const netTotal = deliveredPayable - totalDeductions;
+
+  const summaryY = 60;
+  doc.setFontSize(11);
+  doc.setTextColor(blue);
+  doc.text("Summary", pageWidth - 70, summaryY);
+  doc.setTextColor(gray);
+
+  autoTable(doc, {
+    startY: summaryY + 4,
+    margin: { left: pageWidth - 95 },
+    styles: { fontSize: 8, cellPadding: 2 },
+    head: [["Details", "Count", "COD Amount", "Payable"]],
+    body: [
+      [
+        "Delivered",
+        deliveredCount,
+        deliveredCOD.toFixed(2),
+        deliveredPayable.toFixed(2),
+      ],
+      [
+        "Returned",
+        returnedCount,
+        returnedCOD.toFixed(2),
+        returnedPayable.toFixed(2),
+      ],
+      [
+        { content: "Total", styles: { fontStyle: "bold" } },
+        "",
+        "",
+        totalPayable.toFixed(2),
+      ],
+    ],
+  });
+
+  const afterSummaryY = (doc as any).lastAutoTable.finalY + 5;
+  const charges = [
+    ["Shipping Charges", totalShipping.toFixed(2)],
+    ["GST", totalGst.toFixed(2)],
+    ["Sale Tax", totalSaleTax.toFixed(2)],
+    ["Income Tax", totalIncTax.toFixed(2)],
+    ["Total Deductions", totalDeductions.toFixed(2)],
+    ["Net Payable", netTotal.toFixed(2)],
+  ];
+  autoTable(doc, {
+    startY: afterSummaryY,
+    margin: { left: pageWidth - 95 },
+    styles: { fontSize: 8, cellPadding: 2 },
+    body: charges,
+  });
+
+  const orderStartY = Math.max(90, (doc as any).lastAutoTable.finalY + 10);
+  const totalCodAmount = orders.reduce(
+    (sum, o) => sum + (Number(o.amount) || 0),
+    0
+  );
+
+  const totalReserveAmount = orders.reduce(
+    (sum, o) => sum + (o.status.toLowerCase() === "delivered" ? o.amount : 0),
+    0
+  );
+  const totalShippingAmount = orders.reduce(
+    (sum, o) => sum + Number(o.shippingChargesTotal || 0),
+    0
+  );
+  const totalGstAmount = orders.reduce(
+    (sum, o) => sum + Number(o.gstAmount || 0),
+    0
+  );
+  const totalSaleTaxAmount = orders.reduce(
+    (sum, o) => sum + Number(o.saleTaxAmount || 0),
+    0
+  );
+  const totalIncTaxAmount = orders.reduce(
+    (sum, o) => sum + Number(o.incTaxAmount || 0),
+    0
+  );
+  const totalNetAmount = orders.reduce(
+    (sum, o) => sum + Number(o.netTotal || 0),
+    0
+  );
+
+  autoTable(doc, {
+    startY: orderStartY,
+    headStyles: { fillColor: blue, textColor: "#fff", halign: "center" },
+    styles: { fontSize: 8, halign: "center" },
+    head: [
+      [
+        "#",
+        "Order No",
+        "Status",
+        "Booking Date",
+        "Delivery / Return Date",
+        "Weight",
+        "COD Amount",
+        "Reserve Amount",
+        "Shipping",
+        "GST",
+        "Sale Tax",
+        "Inc Tax",
+        "Net Amount",
+      ],
+    ],
+    body: [
+      ...orders.map((o, i) => {
+        const bookingDate = o.bookingDate
+          ? new Date(o.bookingDate).toLocaleDateString()
+          : "-";
+
+        const deliveredOrReturnDate =
+          o.status.toLowerCase() === "delivered"
+            ? o.deliveredDate
+              ? new Date(o.deliveredDate).toLocaleDateString()
+              : "-"
+            : o.status.toLowerCase() === "return"
+            ? o.returnDate
+              ? new Date(o.returnDate).toLocaleDateString()
+              : "-"
+            : "-";
+
+        return [
+          i + 1,
+          o.orderNumber,
+          o.status,
+          bookingDate,
+          deliveredOrReturnDate,
+          o.actualWeight?.toFixed(2),
+          o.amount.toFixed(2),
+          o.status.toLowerCase() === "delivered" ? o.amount.toFixed(2) : "0.00",
+          o.shippingChargesTotal,
+          o.gstAmount,
+          o.saleTaxAmount,
+          o.incTaxAmount,
+          o.netTotal,
+        ];
+      }),
+      [
+        {
+          content: "Total",
+          colSpan: 6,
+          styles: { halign: "right", fontStyle: "bold" },
+        },
+        totalCodAmount.toFixed(2),
+        totalReserveAmount.toFixed(2),
+        totalShippingAmount.toFixed(2),
+        totalGstAmount.toFixed(2),
+        totalSaleTaxAmount.toFixed(2),
+        totalIncTaxAmount.toFixed(2),
+        totalNetAmount.toFixed(2),
+      ],
+    ],
+    footStyles: {
+      fillColor: "#f2f2f2",
+      textColor: "#000",
+      fontStyle: "bold",
+    },
+  });
+
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    const pageHeight = doc.internal.pageSize.getHeight();
+    doc.setFontSize(8);
+    doc.setTextColor(gray);
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, {
+      align: "center",
+    });
+  }
+
+  doc.save(`PaymentReceipt_${cprNumber}.pdf`);
+};

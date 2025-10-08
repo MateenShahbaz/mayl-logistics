@@ -10,6 +10,7 @@ import { Table } from "antd";
 import Button from "../../../components/ui/button/Button";
 import { Modal } from "../../../components/ui/modal";
 import { useModal } from "../../../hooks/useModal";
+import { generatePaymentPDF } from "../../../utils/generatePDF";
 // import Button from "../../../components/ui/button/Button";
 
 const options = [{ value: "lahore", label: "Lahore" }];
@@ -20,6 +21,21 @@ const AddPayment = () => {
   const [tableData, setTableData] = useState<any[]>([]);
   const [selectedOrders, setSelectedOrders] = useState<any[]>([]);
   const { isOpen, openModal, closeModal } = useModal();
+  const [formData, setFormData] = useState({
+    shippingCharges: 0,
+    extraCharges: 0,
+    saleTax: 0,
+    incTax: 0,
+    gst: 0,
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value === "" ? "" : Number(value),
+    }));
+  };
 
   const handler = async () => {
     if (!status || !shipperNumber) {
@@ -74,10 +90,83 @@ const AddPayment = () => {
       return errorToast("Please select at least one order");
     }
     openModal();
-    console.log("Generating sheet for:", selectedOrders);
   };
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (selectedOrders.length === 0) {
+      return errorToast("Please select at least one order");
+    }
+
+    const { shippingCharges, extraCharges, saleTax, incTax, gst } = formData;
+
+    const updatedOrders = selectedOrders.map((order) => {
+      const weight = Number(order.actualWeight || 0);
+      const amount = Number(order.amount || 0);
+      const status = order.status?.toLowerCase();
+
+      let totalShipping = shippingCharges;
+      if (weight > 1) {
+        const extraWeight = weight - 1;
+        const extraUnits = Math.ceil(extraWeight);
+        totalShipping += extraUnits * extraCharges;
+      }
+
+      const gstAmount = (totalShipping * gst) / 100;
+      let saleTaxAmount = 0;
+      let incTaxAmount = 0;
+      let netTotal = 0;
+
+      if (status === "delivered") {
+        saleTaxAmount = (amount * saleTax) / 100;
+        incTaxAmount = (amount * incTax) / 100;
+        netTotal =
+          amount - (totalShipping + gstAmount + saleTaxAmount + incTaxAmount);
+      } else if (status === "return" || status === "returned") {
+        netTotal = -(totalShipping + gstAmount);
+      } else {
+        netTotal = amount;
+      }
+
+      return {
+        ...order,
+        shippingChargesTotal: totalShipping.toFixed(2),
+        gstAmount: gstAmount.toFixed(2),
+        saleTaxAmount: saleTaxAmount.toFixed(2),
+        incTaxAmount: incTaxAmount.toFixed(2),
+        netTotal: netTotal.toFixed(2),
+      };
+    });
+
+    try {
+      const payload = {
+        shipperNumber: shipperNumber,
+        cityCode: "LHR",
+        shippingCharges,
+        extraCharges,
+        saleTax,
+        incTax,
+        gst,
+        orders: updatedOrders.map((o) => o._id),
+      };
+
+      const response = await apiCaller({
+        method: "POST",
+        url: "/payment/add",
+        data: payload,
+      });
+      if (response.code === 200) {
+        await generatePaymentPDF(
+          updatedOrders,
+          response.data.merchant,
+          response.data.sheetNumber,
+          response.data.createdAt
+        );
+      }
+    } catch (error) {}
+  };
+
   return (
     <>
       <PageMeta title="Mayl Logistics" description="Add Payment" />
@@ -137,7 +226,7 @@ const AddPayment = () => {
                       {tableData.length === 1 ? "entry" : "entries"}
                     </div>
                     <Button onClick={handleGenerateSheet}>
-                      Generate Sheet ({selectedOrders.length})
+                      Generate Payment ({selectedOrders.length})
                     </Button>
                   </div>
 
@@ -168,7 +257,97 @@ const AddPayment = () => {
               Generate Payment
             </h4>
           </div>
-          <form className="flex flex-col" onSubmit={handleSubmit}></form>
+          <form className="flex flex-col" onSubmit={handleSubmit}>
+            <div className="custom-scrollbar overflow-y-auto px-2 pb-3">
+              <div className="mt-7">
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Shipping charges <span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="number"
+                      name="shippingCharges"
+                      value={formData.shippingCharges}
+                      onChange={handleChange}
+                      placeholder="Enter Charges up to one kg"
+                      required
+                    />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Extra charges <span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="number"
+                      name="extraCharges"
+                      value={formData.extraCharges}
+                      onChange={handleChange}
+                      placeholder="Enter extra shipping charges"
+                      required
+                    />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Sale Tax (%) <span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="number"
+                      name="saleTax"
+                      value={formData.saleTax}
+                      onChange={handleChange}
+                      placeholder="Enter sales tax"
+                      required
+                    />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      Inc. Tax (%) <span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="number"
+                      name="incTax"
+                      value={formData.incTax}
+                      onChange={handleChange}
+                      placeholder="Enter Inc. tax"
+                      required
+                    />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>
+                      GST (%) <span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="number"
+                      name="gst"
+                      value={formData.gst}
+                      onChange={handleChange}
+                      placeholder="Enter GST"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={closeModal}
+                  >
+                    Close
+                  </Button>
+                  <Button size="sm" type="submit">
+                    Save
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </form>
         </div>
       </Modal>
     </>
