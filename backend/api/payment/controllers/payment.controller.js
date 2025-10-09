@@ -118,6 +118,13 @@ exports.add = async (req, res) => {
       orders,
     });
 
+    if (orders.length > 0) {
+      await orderModel.updateMany(
+        { _id: { $in: orders } },
+        { $set: { cprGenerated: true } }
+      );
+    }
+
     const pickupAddress =
       (await addressModel.findOne({
         userId: shipper._id,
@@ -224,7 +231,9 @@ exports.shipperPayments = async (req, res) => {
       .limit(Number(limit))
       .skip(Number(skip));
 
-    const paymentCount = await paymentModel.countDocuments({shipperId: req.user.id });
+    const paymentCount = await paymentModel.countDocuments({
+      shipperId: req.user.id,
+    });
 
     response.success_message(payments, res, paymentCount);
   } catch (error) {

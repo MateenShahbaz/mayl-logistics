@@ -11,6 +11,7 @@ import Button from "../../../components/ui/button/Button";
 import { Modal } from "../../../components/ui/modal";
 import { useModal } from "../../../hooks/useModal";
 import { generatePaymentPDF } from "../../../utils/generatePDF";
+import { useNavigate } from "react-router";
 // import Button from "../../../components/ui/button/Button";
 
 const options = [{ value: "lahore", label: "Lahore" }];
@@ -28,7 +29,7 @@ const AddPayment = () => {
     incTax: 0,
     gst: 0,
   });
-
+  const navigate = useNavigate();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -163,6 +164,7 @@ const AddPayment = () => {
           response.data.sheetNumber,
           response.data.createdAt
         );
+        navigate("/payment")
       }
     } catch (error) {}
   };
