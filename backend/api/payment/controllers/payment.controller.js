@@ -179,3 +179,56 @@ exports.list = async (req, res) => {
     response.error_message(error.message, res);
   }
 };
+
+exports.updateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payment = await paymentModel.findById(id);
+
+    if (!payment) {
+      return response.data_error_message({ message: "Payment not found" }, res);
+    }
+
+    payment.status = "paid";
+    await payment.save();
+
+    response.success_message({ message: "Payment status update" }, res);
+  } catch (error) {
+    console.error(error.message);
+    response.error_message(error.message, res);
+  }
+};
+
+exports.shipperPayments = async (req, res) => {
+  try {
+    const { limit = 10, skip = 0, selectDate, search, searchType } = req.query;
+    let query = { shipperId: req.user.id };
+    if (search && searchType) {
+      switch (searchType) {
+        case "shipper no":
+          query.sheetNumber = { $regex: search, $options: "i" };
+          break;
+      }
+    }
+
+    if (selectDate) {
+      const start = new Date(`${selectDate}T00:00:00.000Z`);
+      const end = new Date(`${selectDate}T23:59:59.999Z`);
+
+      query.createdAt = { $gte: start, $lte: end };
+    }
+
+    const payments = await paymentModel
+      .find(query)
+      .select("sheetNumber status orders")
+      .limit(Number(limit))
+      .skip(Number(skip));
+
+    const paymentCount = await paymentModel.countDocuments({shipperId: req.user.id });
+
+    response.success_message(payments, res, paymentCount);
+  } catch (error) {
+    console.error(error.message);
+    response.error_message(error.message, res);
+  }
+};

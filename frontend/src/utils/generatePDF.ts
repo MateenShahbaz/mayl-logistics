@@ -1167,40 +1167,51 @@ export const generatePaymentPDF = async (
   const logo = await getBase64Image("/images/logo/dark-logo.png");
 
   const addHeader = () => {
-    doc.addImage(logo, "PNG", 10, 8, 25, 12);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFillColor("#f5f5f5");
+    doc.rect(0, 0, pageWidth, 20, "F"); // reduced height from 28 → 20
+
+    doc.addImage(logo, "PNG", 12, 4, 30, 12);
+
     doc.setFont("helvetica", "normal");
-    doc.text("Sector Y DHA phase 3 lahore", 38, 19);
-    doc.text("03314636832", 38, 24);
+    doc.setFontSize(8.5);
+    doc.setTextColor("#000000");
+    doc.text("Sector Y, DHA Phase 3, Lahore", 48, 10);
+    doc.text("Phone: 0331 4636832", 48, 14);
 
-    doc.setFont("helvetica", "bold");
+    // Right-side date
     const dateStr = new Date().toLocaleString();
-    doc.text(dateStr, pageWidth - 10, 14, { align: "right" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.text(dateStr, pageWidth - 12, 12, { align: "right" });
 
-    doc.setDrawColor(blue);
-    doc.line(10, 27, pageWidth - 10, 27);
+    // Subtle gray underline
+    doc.setDrawColor("#b0b0b0");
+    doc.setLineWidth(0.4);
+    doc.line(10, 20, pageWidth - 10, 20);
+
+    // Reset color
+    doc.setTextColor("#000000");
   };
+
   addHeader();
 
-  doc.setFontSize(14);
-  doc.setTextColor(blue);
-  doc.text("Cash Payment Receipt", 10, 38);
-  doc.setTextColor(gray);
-  doc.setFontSize(10);
-  doc.text(`CPR Number: ${cprNumber}`, 10, 44);
-  doc.text(`CPR Date: ${new Date(createdAt).toLocaleDateString()}`, 10, 49);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.setTextColor("#000000");
+  doc.text("Cash Payment Receipt", 10, 34);
 
-  doc.setTextColor(blue);
-  doc.setFontSize(11);
-  doc.text("Merchant Details", 10, 60);
-  doc.setTextColor(gray);
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`${merchant.name}`, 10, 65);
-  doc.text(`${merchant.address}`, 10, 70);
-  doc.text(`${merchant.phone}`, 10, 75);
-  doc.text(`${merchant.email}`, 10, 80);
+  doc.setTextColor(gray);
+  doc.text(`CPR Number: ${cprNumber}`, 10, 40);
+  doc.text(`CPR Date: ${new Date(createdAt).toLocaleDateString()}`, 10, 45);
 
+  // Divider
+  doc.setDrawColor("#d0d0d0");
+  doc.setLineWidth(0.3);
+  doc.line(10, 48, pageWidth - 10, 48);
+
+  // ---- Calculations (same logic) ----
   const deliveredOrders = orders.filter(
     (o) => o.status.toLowerCase() === "delivered"
   );
@@ -1216,7 +1227,7 @@ export const generatePaymentPDF = async (
   const deliveredCOD = deliveredOrders.reduce((sum, o) => sum + o.amount, 0);
   const returnedCOD = returnedOrders.reduce((sum, o) => sum + o.amount, 0);
 
-  const deliveredPayable = deliveredCOD; // full amount of delivered
+  const deliveredPayable = deliveredCOD;
   const returnedPayable = 0;
 
   const totalPayable = deliveredPayable + returnedPayable;
@@ -1241,16 +1252,40 @@ export const generatePaymentPDF = async (
   const totalDeductions = totalGst + totalSaleTax + totalIncTax + totalShipping;
   const netTotal = deliveredPayable - totalDeductions;
 
-  const summaryY = 60;
+  // ---- LEFT COLUMN: Merchant Details ----
+  const leftY = 56;
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.setTextColor(blue);
-  doc.text("Summary", pageWidth - 70, summaryY);
+  doc.setTextColor("#000000");
+  doc.text("Merchant Details", 10, leftY);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
   doc.setTextColor(gray);
+  const merchantY = leftY + 6;
+  doc.text(`${merchant.name}`, 10, merchantY);
+  doc.text(`${merchant.address}`, 10, merchantY + 5);
+  doc.text(`${merchant.phone}`, 10, merchantY + 10);
+  doc.text(`${merchant.email}`, 10, merchantY + 15);
+
+  // ---- RIGHT COLUMN: Summary & Charges ----
+  const rightX = pageWidth - 95;
+  const rightY = leftY;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor("#000000");
+  doc.text("Summary", rightX, rightY);
 
   autoTable(doc, {
-    startY: summaryY + 4,
-    margin: { left: pageWidth - 95 },
-    styles: { fontSize: 8, cellPadding: 2 },
+    startY: rightY + 4,
+    margin: { left: rightX },
+    styles: { fontSize: 8, cellPadding: 2, textColor: "#000000" },
+    headStyles: {
+      fillColor: "#e6e6e6",
+      textColor: "#000000",
+      fontStyle: "bold",
+    },
     head: [["Details", "Count", "COD Amount", "Payable"]],
     body: [
       [
@@ -1275,27 +1310,39 @@ export const generatePaymentPDF = async (
   });
 
   const afterSummaryY = (doc as any).lastAutoTable.finalY + 5;
-  const charges = [
-    ["Shipping Charges", totalShipping.toFixed(2)],
-    ["GST", totalGst.toFixed(2)],
-    ["Sale Tax", totalSaleTax.toFixed(2)],
-    ["Income Tax", totalIncTax.toFixed(2)],
-    ["Total Deductions", totalDeductions.toFixed(2)],
-    ["Net Payable", netTotal.toFixed(2)],
-  ];
+
   autoTable(doc, {
     startY: afterSummaryY,
-    margin: { left: pageWidth - 95 },
+    margin: { left: rightX },
     styles: { fontSize: 8, cellPadding: 2 },
-    body: charges,
+    bodyStyles: { fillColor: "#fafafa" },
+    alternateRowStyles: { fillColor: "#f2f2f2" },
+    body: [
+      ["Shipping Charges", totalShipping.toFixed(2)],
+      ["GST", totalGst.toFixed(2)],
+      ["Sale Tax", totalSaleTax.toFixed(2)],
+      ["Income Tax", totalIncTax.toFixed(2)],
+      [
+        { content: "Total Deductions", styles: { fontStyle: "bold" } },
+        totalDeductions.toFixed(2),
+      ],
+      [
+        {
+          content: "Net Payable",
+          styles: { fontStyle: "bold", textColor: blue },
+        },
+        netTotal.toFixed(2),
+      ],
+    ],
   });
 
+  
   const orderStartY = Math.max(90, (doc as any).lastAutoTable.finalY + 10);
+
   const totalCodAmount = orders.reduce(
     (sum, o) => sum + (Number(o.amount) || 0),
     0
   );
-
   const totalReserveAmount = orders.reduce(
     (sum, o) => sum + (o.status.toLowerCase() === "delivered" ? o.amount : 0),
     0
@@ -1321,81 +1368,90 @@ export const generatePaymentPDF = async (
     0
   );
 
-  autoTable(doc, {
-    startY: orderStartY,
-    headStyles: { fillColor: blue, textColor: "#fff", halign: "center" },
-    styles: { fontSize: 8, halign: "center" },
-    head: [
-      [
-        "#",
-        "Order No",
-        "Status",
-        "Booking Date",
-        "Delivery / Return Date",
-        "Weight",
-        "COD Amount",
-        "Reserve Amount",
-        "Shipping",
-        "GST",
-        "Sale Tax",
-        "Inc Tax",
-        "Net Amount",
-      ],
+  // --- Updated Orders Table Design ---
+autoTable(doc, {
+  startY: orderStartY,
+  headStyles: {
+    fillColor: "#f2f2f2", // light gray background for header
+    textColor: "#333333", // dark gray text
+    halign: "center",
+    fontStyle: "bold",
+  },
+  styles: {
+    fontSize: 8,
+    halign: "center",
+    lineColor: "#e0e0e0", // subtle gray border lines
+    lineWidth: 0.1,
+    cellPadding: 2,
+  },
+  alternateRowStyles: { fillColor: "#fafafa" }, // slightly lighter row background
+  head: [
+    [
+      "#",
+      "Order No",
+      "Status",
+      "Booking Date",
+      "Delivery / Return Date",
+      "Weight",
+      "COD Amount",
+      "Reserve Amount",
+      "Shipping",
+      "GST",
+      "Sale Tax",
+      "Inc Tax",
+      "Net Amount",
     ],
-    body: [
-      ...orders.map((o, i) => {
-        const bookingDate = o.bookingDate
-          ? new Date(o.bookingDate).toLocaleDateString()
+  ],
+  body: [
+    ...orders.map((o, i) => {
+      const bookingDate = o.bookingDate
+        ? new Date(o.bookingDate).toLocaleDateString()
+        : "-";
+
+      const deliveredOrReturnDate =
+        o.status.toLowerCase() === "delivered"
+          ? o.deliveredDate
+            ? new Date(o.deliveredDate).toLocaleDateString()
+            : "-"
+          : o.status.toLowerCase() === "return"
+          ? o.returnDate
+            ? new Date(o.returnDate).toLocaleDateString()
+            : "-"
           : "-";
 
-        const deliveredOrReturnDate =
-          o.status.toLowerCase() === "delivered"
-            ? o.deliveredDate
-              ? new Date(o.deliveredDate).toLocaleDateString()
-              : "-"
-            : o.status.toLowerCase() === "return"
-            ? o.returnDate
-              ? new Date(o.returnDate).toLocaleDateString()
-              : "-"
-            : "-";
-
-        return [
-          i + 1,
-          o.orderNumber,
-          o.status,
-          bookingDate,
-          deliveredOrReturnDate,
-          o.actualWeight?.toFixed(2),
-          o.amount.toFixed(2),
-          o.status.toLowerCase() === "delivered" ? o.amount.toFixed(2) : "0.00",
-          o.shippingChargesTotal,
-          o.gstAmount,
-          o.saleTaxAmount,
-          o.incTaxAmount,
-          o.netTotal,
-        ];
-      }),
-      [
-        {
-          content: "Total",
-          colSpan: 6,
-          styles: { halign: "right", fontStyle: "bold" },
-        },
-        totalCodAmount.toFixed(2),
-        totalReserveAmount.toFixed(2),
-        totalShippingAmount.toFixed(2),
-        totalGstAmount.toFixed(2),
-        totalSaleTaxAmount.toFixed(2),
-        totalIncTaxAmount.toFixed(2),
-        totalNetAmount.toFixed(2),
-      ],
+      return [
+        i + 1,
+        o.orderNumber,
+        o.status,
+        bookingDate,
+        deliveredOrReturnDate,
+        o.actualWeight?.toFixed(2),
+        o.amount.toFixed(2),
+        o.status.toLowerCase() === "delivered" ? o.amount.toFixed(2) : "0.00",
+        o.shippingChargesTotal,
+        o.gstAmount,
+        o.saleTaxAmount,
+        o.incTaxAmount,
+        o.netTotal,
+      ];
+    }),
+    [
+      {
+        content: "Total",
+        colSpan: 6,
+        styles: { halign: "right", fontStyle: "bold", textColor: "#000" },
+      },
+      totalCodAmount.toFixed(2),
+      totalReserveAmount.toFixed(2),
+      totalShippingAmount.toFixed(2),
+      totalGstAmount.toFixed(2),
+      totalSaleTaxAmount.toFixed(2),
+      totalIncTaxAmount.toFixed(2),
+      totalNetAmount.toFixed(2),
     ],
-    footStyles: {
-      fillColor: "#f2f2f2",
-      textColor: "#000",
-      fontStyle: "bold",
-    },
-  });
+  ],
+});
+
 
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {

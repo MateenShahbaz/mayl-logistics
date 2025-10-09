@@ -306,8 +306,8 @@ const OnRoute = () => {
                     showTotal: (total, range) =>
                       `Showing ${range[0]} to ${range[1]} of ${total} entries`,
                     showSizeChanger: true,
-                    pageSizeOptions: [5, 15, 35, 50],
-                    defaultPageSize: 5,
+                    pageSizeOptions: [10, 15, 35, 50],
+                    defaultPageSize: 10,
                     defaultCurrent: 1,
                     onChange: (page, pageSize) =>
                       handlePagination(page, pageSize),

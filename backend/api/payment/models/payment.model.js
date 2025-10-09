@@ -39,7 +39,7 @@ const PaymentSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ["new"],
+      enum: ["new", "paid"],
     },
     orders: [
       {

@@ -3,17 +3,39 @@ import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
 import Button from "../../../components/ui/button/Button";
 import Label from "../../../components/form/Label";
-import { DatePicker } from "antd";
+import { DatePicker, Table } from "antd";
 import { useEffect, useState } from "react";
 import { apiCaller } from "../../../core/API/ApiServices";
+import { MoreDotIcon } from "../../../icons";
+import { Dropdown } from "../../../components/ui/dropdown/Dropdown";
+import { DropdownItem } from "../../../components/ui/dropdown/DropdownItem";
+import { useModal } from "../../../hooks/useModal";
+import { Modal } from "../../../components/ui/modal";
+import Select from "../../../components/form/Select";
+import { successToast } from "../../../core/core-index";
 const searchOptions = ["SHIPPER NO #"];
 
+const options = [{ value: "paid", label: "Paid" }];
 const Payment = () => {
   const [searchType, setSearchType] = useState("SHIPPER NO #");
   const [searchValue, setSearchValue] = useState("");
   const [selectDate, setSelectDate] = useState<any>(null);
   const [dataSource, setDataSource] = useState([]);
   const [totalCounts, settotalCounts] = useState(0);
+  const [updateStatusId, setUpdateStatusId] = useState(null);
+  const [, setPage] = useState(1);
+  const [, setPagesize] = useState(10);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [status, setStatus] = useState("");
+  const { isOpen, openModal, closeModal } = useModal();
+
+  function toggleDropdown(recordId: string) {
+    setOpenDropdownId(openDropdownId === recordId ? null : recordId);
+  }
+
+  function closeDropdown() {
+    setOpenDropdownId(null);
+  }
 
   const handleSearch = async (currentpage = 1, currentpagesize = 10) => {
     let skipSize;
@@ -57,15 +79,126 @@ const Payment = () => {
       params,
     });
     if (response.code === 200) {
-      setDataSource(response.data.orders);
+      setDataSource(response.data);
       settotalCounts(response.totalRecords);
     }
+  };
+
+  const handleClear = () => {
+    setSearchValue("");
+    setSelectDate(null);
+    fetchDetails();
   };
 
   useEffect(() => {
     fetchDetails();
   }, []);
 
+  const handlePagination = async (page: number, pageSize: number) => {
+    setPage(page);
+    setPagesize(pageSize);
+    fetchDetails(page, pageSize);
+  };
+
+  const editHandle = (record: any) => {
+    setUpdateStatusId(record?._id);
+    openModal();
+  };
+  const columns = [
+    { title: "Sheet No", dataIndex: "sheetNumber", key: "sheetNumber" },
+    {
+      title: "Total Order",
+      key: "orderCount",
+      render: (_: any, record: any) => record.orders?.length || 0,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status: string) => {
+        let bgColor = "#6b7280";
+
+        switch (status) {
+          case "new":
+            bgColor = "#f59e0b";
+            break;
+          case "close":
+            bgColor = "#10b981";
+            break;
+          case "paid":
+            bgColor = "#3b82f6";
+            break;
+          case "cancel":
+            bgColor = "#ef4444";
+            break;
+        }
+
+        return (
+          <span
+            style={{
+              padding: "6px 10px",
+              borderRadius: "8px",
+              backgroundColor: bgColor,
+              color: "#fff",
+              textTransform: "uppercase",
+              fontWeight: 500,
+            }}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Action",
+      dataIndex: "Action",
+      render: (_: any, record: any) => {
+        return (
+          <div className="relative inline-block">
+            <button
+              className="dropdown-toggle"
+              onClick={() => toggleDropdown(record._id)}
+            >
+              <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 size-6" />
+            </button>
+            <Dropdown
+              isOpen={openDropdownId === record._id}
+              onClose={closeDropdown}
+              className="w-40 p-2"
+            >
+              <DropdownItem
+                onItemClick={() => {
+                  editHandle(record);
+                  closeDropdown();
+                }}
+                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              >
+                Update Status
+              </DropdownItem>
+            </Dropdown>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await apiCaller({
+        method: "PUT",
+        url: `/payment/status/${updateStatusId}`,
+      });
+      closeModal();
+
+      if (response.code === 200) {
+        successToast("Status is update");
+        fetchDetails();
+        setStatus("");
+        setUpdateStatusId(null);
+      }
+    } catch (error) {}
+  };
   return (
     <>
       <div>
@@ -96,7 +229,7 @@ const Payment = () => {
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      // handleSearch();
+                      handleSearch();
                     }}
                   >
                     <Label>Advanced Search</Label>
@@ -176,9 +309,8 @@ const Payment = () => {
                     <div className="my-4 flex justify-end gap-3">
                       <Button
                         className=""
-                        type="button"
                         variant="outline"
-                        // onClick={handleClear}
+                        onClick={handleClear}
                       >
                         Clear Filter
                       </Button>
@@ -189,10 +321,71 @@ const Payment = () => {
                   </form>
                 </div>
               </div>
+
+              <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
+                <div className="space-y-6 overflow-x-auto overflow-y-visible">
+                  <Table
+                    rowKey="_id"
+                    dataSource={dataSource}
+                    columns={columns}
+                    // scroll={{ x: "max-content" }}
+                    pagination={{
+                      total: totalCounts,
+                      showTotal: (total, range) =>
+                        `Showing ${range[0]} to ${range[1]} of ${total} entries`,
+                      showSizeChanger: true,
+                      pageSizeOptions: [10, 15, 35, 50],
+                      defaultPageSize: 10,
+                      defaultCurrent: 1,
+                      onChange: (page, pageSize) =>
+                        handlePagination(page, pageSize),
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[380px] m-4">
+        <div className="no-scrollbar relative w-full max-w-[380px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+          <div className="px-2 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              Payment Status
+            </h4>
+          </div>
+          <form className="flex flex-col" onSubmit={handleSubmit}>
+            <div className="custom-scrollbar overflow-y-auto px-2 pb-3">
+              {/* Order Information */}
+              <div className="mt-7">
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                  <div className="col-span-2">
+                    <Label>
+                      Order Type <span className="text-error-500">*</span>
+                    </Label>
+                    <Select
+                      options={options}
+                      defaultValue={status}
+                      placeholder="Choose Status"
+                      onChange={(val: string) => setStatus(val)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+              <Button
+                size="sm"
+                type="submit"
+                // onClick={() => setPrintMode(false)}
+              >
+                Save
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
     </>
   );
 };
