@@ -738,13 +738,12 @@ export const deliveryRouteSheetPdf = (
     });
   };
 
-  // Call header on first page
+  // ======= START LAYOUT VARS =======
   addHeader();
 
-  // ======= LAYOUT VARS =======
   const marginLeft = 10;
   const marginRight = 10;
-  const gapBetweenBoxes = 8;
+  const gapBetweenBoxes = 6;
   const usableWidth = pageWidth - marginLeft - marginRight;
   const boxWidth = (usableWidth - gapBetweenBoxes) / 2;
   const startYInitial = 32;
@@ -759,12 +758,12 @@ export const deliveryRouteSheetPdf = (
     ref: (colProps.ref / refTotal) * boxWidth,
   };
 
-  const headerHeight = 7;
-  const bodyLineHeight = 5;
-  const minBodyLines = 3;
-  const innerPadding = 1;
-  const rowSpacing = 0.5;
-  const bottomMargin = 25;
+  const headerHeight = 6;
+  const bodyLineHeight = 3.5;
+  const minBodyLines = 2;
+  const innerPadding = 0.5;
+  const rowSpacing = 0.8;
+  const bottomMargin = 18;
 
   const drawBox = (
     row: any,
@@ -774,12 +773,12 @@ export const deliveryRouteSheetPdf = (
     height: number,
     indexSerial: number
   ) => {
-    doc.roundedRect(x, y, width, height, 2, 2);
+    doc.roundedRect(x, y, width, height, 1.5, 1.5);
 
     const v1 = x + colWidths.count;
     const v2 = v1 + colWidths.tracking;
     const v3 = v2 + colWidths.info;
-    doc.setLineWidth(0.3);
+    doc.setLineWidth(0.25);
     doc.line(v1, y, v1, y + height);
     doc.line(v2, y, v2, y + height);
     doc.line(v3, y, v3, y + height);
@@ -794,23 +793,23 @@ export const deliveryRouteSheetPdf = (
       ref: v3 + innerPadding,
     };
 
-    doc.setFontSize(7);
+    doc.setFontSize(6.5);
 
-    doc.text(String(indexSerial), colX.count, y + 5);
+    doc.text(String(indexSerial), colX.count, y + 4.5);
 
     doc.setFont("helvetica", "bold");
     doc.text(
       String(row.orderNumber || row.trackingNo || "-"),
       colX.tracking,
-      y + 5,
+      y + 4.5,
       { maxWidth: colWidths.tracking - innerPadding }
     );
     doc.setFont("helvetica", "normal");
 
-    doc.text("Order Info", colX.info, y + 5);
+    doc.text("Info", colX.info, y + 4.5);
 
     doc.setFont("helvetica", "bold");
-    doc.text(String(row.refNumber || "-"), colX.ref, y + 5, {
+    doc.text(String(row.refNumber || "-"), colX.ref, y + 4.5, {
       maxWidth: colWidths.ref - innerPadding,
     });
     doc.setFont("helvetica", "normal");
@@ -821,32 +820,33 @@ export const deliveryRouteSheetPdf = (
       ? doc.splitTextToSize(String(address), trackingMaxW)
       : [];
 
-    const firstBodyY = headerY + bodyLineHeight;
-    doc.setFontSize(6);
-    doc.text("Pcs:", colX.count, firstBodyY);
-    doc.text(`${row.items || 1}`, colX.count + 2, firstBodyY + 2);
-    doc.text("Wt:", colX.count, firstBodyY + 6);
-    doc.text(`${row.actualWeight ?? 0}`, colX.count + 2, firstBodyY + 8);
-    doc.setFontSize(6);
-    const addressLineHeight = 3.2;
+    const firstBodyY = headerY + 3.5;
+    doc.setFontSize(5.5);
+    doc.text("P:", colX.count, firstBodyY);
+    doc.text(`${row.items || 1}`, colX.count + 2, firstBodyY);
+    doc.text("W:", colX.count, firstBodyY + 3);
+    doc.text(`${row.actualWeight ?? 0}`, colX.count + 2, firstBodyY + 3);
+
     let addrY = firstBodyY;
+    const addressLineHeight = 2.8;
     addressLines.forEach((line: any) => {
       doc.text(line, colX.tracking, addrY, { maxWidth: trackingMaxW });
       addrY += addressLineHeight;
     });
 
-    doc.text(
-      `${row.customer?.contactNumber || row.phone || "-"}`,
-      colX.info,
-      firstBodyY
-    );
-    doc.setFontSize(6);
-    doc.text(`Mayl logistics COD`, colX.info, firstBodyY + bodyLineHeight);
-    doc.setFontSize(7);
+    // ==== Customer Info Section ====
+    doc.setFontSize(5.5);
+    const contact = row.customer?.contactNumber || row.phone || "-";
+    const name = row.customer?.name || "-";
 
+    doc.text(`${contact}`, colX.info, firstBodyY);
+    doc.text(`${name}`, colX.info, firstBodyY + 3);
+    doc.text(`COD`, colX.info, firstBodyY + 5.5); // ⬅️ moved slightly lower for better spacing
+    doc.setFontSize(6);
     doc.text("Status:", colX.ref, firstBodyY);
   };
 
+  // ======= LOOP THROUGH DATA =======
   for (let i = 0; i < tableData.length; i += 2) {
     const left = tableData[i];
     const right = tableData[i + 1];
@@ -865,8 +865,10 @@ export const deliveryRouteSheetPdf = (
     const leftNeededLines = Math.max(minBodyLines, leftAddrLines.length);
     const rightNeededLines = Math.max(minBodyLines, rightAddrLines.length);
     const neededBodyLines = Math.max(leftNeededLines, rightNeededLines);
+
+    // ⬅️ Increased total height slightly (+1.5mm)
     const rowHeight =
-      headerHeight + neededBodyLines * bodyLineHeight + innerPadding * 2 + 1;
+      headerHeight + neededBodyLines * bodyLineHeight + innerPadding * 2 + 2;
 
     if (startY + rowHeight + bottomMargin > pageHeight) {
       addFooter();
@@ -922,18 +924,19 @@ export const returnRouteSheetPdf = (
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
+  // ===== LAYOUT VALUES =====
   const marginLeft = 10;
   const marginRight = 10;
-  const gapBetweenBoxes = 8;
+  const gapBetweenBoxes = 6;
   const usableWidth = pageWidth - marginLeft - marginRight;
   const boxWidth = (usableWidth - gapBetweenBoxes) / 2;
-  const startYInitial = 40; // start lower because we print merchant info
-  const headerHeight = 7;
-  const bodyLineHeight = 5;
-  const minBodyLines = 3;
-  const innerPadding = 1;
-  const rowSpacing = 0.5;
-  const bottomMargin = 25;
+  const startYInitial = 38;
+  const headerHeight = 6;
+  const bodyLineHeight = 3.5;
+  const minBodyLines = 2;
+  const innerPadding = 0.5;
+  const rowSpacing = 0.8;
+  const bottomMargin = 18;
 
   const refTotal = 90;
   const colProps = { count: 8, tracking: 38, info: 20, ref: 20 };
@@ -944,6 +947,7 @@ export const returnRouteSheetPdf = (
     ref: (colProps.ref / refTotal) * boxWidth,
   };
 
+  // ===== GROUP BY MERCHANT =====
   const grouped = groupByMerchant(tableData);
   const merchants = Object.values(grouped);
 
@@ -952,14 +956,14 @@ export const returnRouteSheetPdf = (
 
     const { merchant, orders } = merchantGroup;
 
-    // HEADER
+    // ===== HEADER =====
     const addHeader = () => {
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("Courier Return Route Sheet", 14, 10);
 
       const disclaimer =
-        "Rider is responsible for mishandled shipments. Each return must be signed/stamped; negligence will face action.";
+        "Please verify each returned shipment upon receiving. No claims for missing, opened, or damaged items will be entertained after acceptance. Any issue must be reported within 7 days of receiving the return. Mayl Logistics holds no liability beyond this period.";
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6);
@@ -991,6 +995,7 @@ export const returnRouteSheetPdf = (
       doc.text(`Merchant: ${merchant || "-"}`, leftX, 32);
     };
 
+    // ===== FOOTER =====
     const addFooter = () => {
       const footerY = pageHeight - 12;
       const colWidth = pageWidth / 4;
@@ -1009,7 +1014,7 @@ export const returnRouteSheetPdf = (
 
     addHeader();
 
-    // DRAW BOX FUNCTION
+    // ===== DRAW BOX FUNCTION =====
     const drawBox = (
       row: any,
       x: number,
@@ -1018,12 +1023,12 @@ export const returnRouteSheetPdf = (
       height: number,
       indexSerial: number
     ) => {
-      doc.roundedRect(x, y, width, height, 2, 2);
+      doc.roundedRect(x, y, width, height, 1.5, 1.5);
 
       const v1 = x + colWidths.count;
       const v2 = v1 + colWidths.tracking;
       const v3 = v2 + colWidths.info;
-      doc.setLineWidth(0.3);
+      doc.setLineWidth(0.25);
       doc.line(v1, y, v1, y + height);
       doc.line(v2, y, v2, y + height);
       doc.line(v3, y, v3, y + height);
@@ -1038,56 +1043,64 @@ export const returnRouteSheetPdf = (
         ref: v3 + innerPadding,
       };
 
-      doc.setFontSize(7);
+      doc.setFontSize(6.5);
 
-      doc.text(String(indexSerial), colX.count, y + 5);
+      // Count
+      doc.text(String(indexSerial), colX.count, y + 4.5);
 
+      // Tracking No
       doc.setFont("helvetica", "bold");
       doc.text(
         String(row.orderNumber || row.trackingNo || "-"),
         colX.tracking,
-        y + 5,
+        y + 4.5,
         { maxWidth: colWidths.tracking - innerPadding }
       );
       doc.setFont("helvetica", "normal");
 
-      doc.text("Return Info", colX.info, y + 5);
+      // Info Label
+      doc.text("Return Info", colX.info, y + 4.5);
 
+      // Ref Number
       doc.setFont("helvetica", "bold");
-      doc.text(String(row.refNumber || "-"), colX.ref, y + 5, {
+      doc.text(String(row.refNumber || "-"), colX.ref, y + 4.5, {
         maxWidth: colWidths.ref - innerPadding,
       });
       doc.setFont("helvetica", "normal");
 
+      // Address
       const trackingMaxW = colWidths.tracking - innerPadding * 1.5;
       const address = row.shipper?.returnAddress || "";
       const addressLines = address
         ? doc.splitTextToSize(String(address), trackingMaxW)
         : [];
 
-      const firstBodyY = headerY + bodyLineHeight;
-      doc.setFontSize(6);
-      doc.text("Pcs:", colX.count, firstBodyY);
-      doc.text(`${row.items || 1}`, colX.count + 2, firstBodyY + 2);
-      doc.text("Wt:", colX.count, firstBodyY + 6);
-      doc.text(`${row.actualWeight ?? 0}`, colX.count + 2, firstBodyY + 8);
+      const firstBodyY = headerY + 3.5;
+      doc.setFontSize(5.5);
+      doc.text("P:", colX.count, firstBodyY);
+      doc.text(`${row.items || 1}`, colX.count + 2, firstBodyY);
+      doc.text("W:", colX.count, firstBodyY + 3);
+      doc.text(`${row.actualWeight ?? 0}`, colX.count + 2, firstBodyY + 3);
 
-      const addressLineHeight = 3.2;
       let addrY = firstBodyY;
+      const addressLineHeight = 2.8;
       addressLines.forEach((line: any) => {
         doc.text(line, colX.tracking, addrY, { maxWidth: trackingMaxW });
         addrY += addressLineHeight;
       });
 
-      doc.text(`${row.shipper?.mobile || "-"}`, colX.info, firstBodyY);
-      doc.setFontSize(6);
-      doc.text(`Mayl logistics COD`, colX.info, firstBodyY + bodyLineHeight);
-      doc.setFontSize(7);
+      // Shipper Info
+      doc.setFontSize(5.5);
+      const contact = row.shipper?.mobile || "-";
+      doc.text(`${contact}`, colX.info, firstBodyY);
+      doc.text(`COD`, colX.info, firstBodyY + 3);
 
+      // Receiver
+      doc.setFontSize(6);
       doc.text("Receiver:", colX.ref, firstBodyY);
     };
 
-    // LOOP ORDERS
+    // ===== LOOP THROUGH ORDERS =====
     let startY = startYInitial;
     for (let i = 0; i < orders.length; i += 2) {
       const left = orders[i];
@@ -1107,8 +1120,10 @@ export const returnRouteSheetPdf = (
       const leftNeededLines = Math.max(minBodyLines, leftAddrLines.length);
       const rightNeededLines = Math.max(minBodyLines, rightAddrLines.length);
       const neededBodyLines = Math.max(leftNeededLines, rightNeededLines);
+
+      // Slightly increased height like delivery sheet
       const rowHeight =
-        headerHeight + neededBodyLines * bodyLineHeight + innerPadding * 2 + 1;
+        headerHeight + neededBodyLines * bodyLineHeight + innerPadding * 2 + 2;
 
       if (startY + rowHeight + bottomMargin > pageHeight) {
         addFooter();
@@ -1336,7 +1351,6 @@ export const generatePaymentPDF = async (
     ],
   });
 
-  
   const orderStartY = Math.max(90, (doc as any).lastAutoTable.finalY + 10);
 
   const totalCodAmount = orders.reduce(
@@ -1369,89 +1383,88 @@ export const generatePaymentPDF = async (
   );
 
   // --- Updated Orders Table Design ---
-autoTable(doc, {
-  startY: orderStartY,
-  headStyles: {
-    fillColor: "#f2f2f2", // light gray background for header
-    textColor: "#333333", // dark gray text
-    halign: "center",
-    fontStyle: "bold",
-  },
-  styles: {
-    fontSize: 8,
-    halign: "center",
-    lineColor: "#e0e0e0", // subtle gray border lines
-    lineWidth: 0.1,
-    cellPadding: 2,
-  },
-  alternateRowStyles: { fillColor: "#fafafa" }, // slightly lighter row background
-  head: [
-    [
-      "#",
-      "Order No",
-      "Status",
-      "Booking Date",
-      "Delivery / Return Date",
-      "Weight",
-      "COD Amount",
-      "Reserve Amount",
-      "Shipping",
-      "GST",
-      "Sale Tax",
-      "Inc Tax",
-      "Net Amount",
+  autoTable(doc, {
+    startY: orderStartY,
+    headStyles: {
+      fillColor: "#f2f2f2", // light gray background for header
+      textColor: "#333333", // dark gray text
+      halign: "center",
+      fontStyle: "bold",
+    },
+    styles: {
+      fontSize: 8,
+      halign: "center",
+      lineColor: "#e0e0e0", // subtle gray border lines
+      lineWidth: 0.1,
+      cellPadding: 2,
+    },
+    alternateRowStyles: { fillColor: "#fafafa" }, // slightly lighter row background
+    head: [
+      [
+        "#",
+        "Order No",
+        "Status",
+        "Booking Date",
+        "Delivery / Return Date",
+        "Weight",
+        "COD Amount",
+        "Reserve Amount",
+        "Shipping",
+        "GST",
+        "Sale Tax",
+        "Inc Tax",
+        "Net Amount",
+      ],
     ],
-  ],
-  body: [
-    ...orders.map((o, i) => {
-      const bookingDate = o.bookingDate
-        ? new Date(o.bookingDate).toLocaleDateString()
-        : "-";
-
-      const deliveredOrReturnDate =
-        o.status.toLowerCase() === "delivered"
-          ? o.deliveredDate
-            ? new Date(o.deliveredDate).toLocaleDateString()
-            : "-"
-          : o.status.toLowerCase() === "return"
-          ? o.returnDate
-            ? new Date(o.returnDate).toLocaleDateString()
-            : "-"
+    body: [
+      ...orders.map((o, i) => {
+        const bookingDate = o.bookingDate
+          ? new Date(o.bookingDate).toLocaleDateString()
           : "-";
 
-      return [
-        i + 1,
-        o.orderNumber,
-        o.status,
-        bookingDate,
-        deliveredOrReturnDate,
-        o.actualWeight?.toFixed(2),
-        o.amount.toFixed(2),
-        o.status.toLowerCase() === "delivered" ? o.amount.toFixed(2) : "0.00",
-        o.shippingChargesTotal,
-        o.gstAmount,
-        o.saleTaxAmount,
-        o.incTaxAmount,
-        o.netTotal,
-      ];
-    }),
-    [
-      {
-        content: "Total",
-        colSpan: 6,
-        styles: { halign: "right", fontStyle: "bold", textColor: "#000" },
-      },
-      totalCodAmount.toFixed(2),
-      totalReserveAmount.toFixed(2),
-      totalShippingAmount.toFixed(2),
-      totalGstAmount.toFixed(2),
-      totalSaleTaxAmount.toFixed(2),
-      totalIncTaxAmount.toFixed(2),
-      totalNetAmount.toFixed(2),
-    ],
-  ],
-});
+        const deliveredOrReturnDate =
+          o.status.toLowerCase() === "delivered"
+            ? o.deliveredDate
+              ? new Date(o.deliveredDate).toLocaleDateString()
+              : "-"
+            : o.status.toLowerCase() === "return"
+            ? o.returnDate
+              ? new Date(o.returnDate).toLocaleDateString()
+              : "-"
+            : "-";
 
+        return [
+          i + 1,
+          o.orderNumber,
+          o.status,
+          bookingDate,
+          deliveredOrReturnDate,
+          o.actualWeight?.toFixed(2),
+          o.amount.toFixed(2),
+          o.status.toLowerCase() === "delivered" ? o.amount.toFixed(2) : "0.00",
+          o.shippingChargesTotal,
+          o.gstAmount,
+          o.saleTaxAmount,
+          o.incTaxAmount,
+          o.netTotal,
+        ];
+      }),
+      [
+        {
+          content: "Total",
+          colSpan: 6,
+          styles: { halign: "right", fontStyle: "bold", textColor: "#000" },
+        },
+        totalCodAmount.toFixed(2),
+        totalReserveAmount.toFixed(2),
+        totalShippingAmount.toFixed(2),
+        totalGstAmount.toFixed(2),
+        totalSaleTaxAmount.toFixed(2),
+        totalIncTaxAmount.toFixed(2),
+        totalNetAmount.toFixed(2),
+      ],
+    ],
+  });
 
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {

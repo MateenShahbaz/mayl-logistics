@@ -64,8 +64,7 @@ exports.fetchingReturnOrder = async (req, res) => {
     if (order.status !== "return") {
       return response.data_error_message(
         {
-          message:
-            "Shipment can only OnReturn if order is returned",
+          message: "Shipment can only OnReturn if order is returned",
         },
         res
       );
@@ -160,7 +159,7 @@ exports.addReturn = async (req, res) => {
       orderId: order._id,
       previousStatus: order.status,
       newStatus: "out for return",
-      message: "Parcel out for return",
+      message: "Parcel out for return to merchnat wearhouse",
       courierId,
       createdBy: userId,
       visibleToShipper: true,
@@ -387,7 +386,7 @@ exports.updateOrderStatuses = async (req, res) => {
 
         case "cne":
           newStatus = "attempted";
-          message = "Attempt made : (connection not established)";
+          message = "Attempt made : (contact not established)";
           break;
 
         case "ica":
@@ -401,6 +400,21 @@ exports.updateOrderStatuses = async (req, res) => {
       }
 
       await orderModel.findByIdAndUpdate(update.orderId, { status: newStatus });
+
+      if (newStatus === "return") {
+        const refusedHistory = new historyModel({
+          orderId: update.orderId,
+          previousStatus: prevStatus,
+          newStatus: "return",
+          message: "Customer refused to take parcel",
+          courierId: "",
+          visibleToShipper: true,
+          isForward: false,
+          createdBy: user?.id,
+          isDelete: false,
+        });
+        await refusedHistory.save();
+      }
 
       const history = new historyModel({
         orderId: update.orderId,
@@ -500,6 +514,21 @@ exports.shipperAdviceStatus = async (req, res) => {
 
       await orderModel.findByIdAndUpdate(update.orderId, { status: newStatus });
 
+      if (newStatus === "return") {
+        const refusedHistory = new historyModel({
+          orderId: update.orderId,
+          previousStatus: prevStatus,
+          newStatus: "return",
+          message: "Customer refused to take parcel",
+          courierId: "",
+          visibleToShipper: true,
+          isForward: false,
+          createdBy: user?.id,
+          isDelete: false,
+        });
+        await refusedHistory.save();
+      }
+
       const history = new historyModel({
         orderId: update.orderId,
         previousStatus: prevStatus,
@@ -520,7 +549,6 @@ exports.shipperAdviceStatus = async (req, res) => {
     response.error_message(error.message);
   }
 };
-
 
 exports.returnStatus = async (req, res) => {
   try {
