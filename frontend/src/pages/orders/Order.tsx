@@ -316,7 +316,7 @@ const Order = () => {
       url: `/order/view/${record?._id}`,
     });
     if (response.code === 200) {
-      const data = response.data;
+      const data = response.data.order;
       setFormData({
         orderType: data.orderType,
         refNumber: data.refNumber,

@@ -414,7 +414,7 @@ export default function OrderLog() {
       url: `/order/view/${record?._id}`,
     });
     if (response.code === 200) {
-      const data = response.data;
+      const data = response.data.order;
       setFormData({
         orderType: data.orderType,
         refNumber: data.refNumber,
@@ -423,10 +423,10 @@ export default function OrderLog() {
         items: data.items,
         weight: data.weight,
         customer: {
-          name: data.customer.name,
-          contactNumber: data.customer.contactNumber,
+          name: data?.customer?.name,
+          contactNumber: data?.customer?.contactNumber,
           deliverCity: "Lahore",
-          deliveryAddress: data.customer.deliveryAddress,
+          deliveryAddress: data?.customer?.deliveryAddress,
         },
         shipperInfo: {
           pickupAddress: data.shipperInfo?.pickupAddress,
