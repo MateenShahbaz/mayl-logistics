@@ -273,7 +273,7 @@ const OrderView = () => {
                   orderHistory.map((history: any) => (
                     <div
                       key={history._id}
-                      className="flex flex-col items-center border-b border-gray-100 pb-3"
+                      className="flex flex-col gap-5 items-center border-b border-gray-100 pb-3"
                     >
                       <div className="flex-shrink-0 relative">
                         {getStatusIcon(history.newStatus)}
